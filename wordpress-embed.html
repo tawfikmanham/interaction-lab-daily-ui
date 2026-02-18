@@ -1,0 +1,420 @@
+<!--
+  WORDPRESS EMBED — Payment Button with Confetti
+
+  HOW TO USE:
+  1. In WordPress, go to the page/post editor
+  2. Add a "Custom HTML" block (click + → search "Custom HTML")
+  3. Paste this ENTIRE snippet into that block
+  4. Preview or publish — done!
+
+  All styles are scoped with .pb-widget so they won't
+  conflict with your WordPress theme.
+-->
+
+<div class="pb-widget">
+  <div class="pb-shell">
+    <div class="pb-container">
+      <div class="pb-header">
+        <h2 class="pb-title">Secure Checkout</h2>
+        <p class="pb-subtitle">Complete your purchase securely</p>
+      </div>
+
+      <div class="pb-card">
+        <div class="pb-row">
+          <span class="pb-label">Product</span>
+          <span class="pb-value">Premium Plan</span>
+        </div>
+        <div class="pb-row">
+          <span class="pb-label">Duration</span>
+          <span class="pb-value">12 months</span>
+        </div>
+        <div class="pb-divider">
+          <div class="pb-total-row">
+            <span class="pb-total-label">Total</span>
+            <span class="pb-total-value">$99.00</span>
+          </div>
+        </div>
+
+        <div class="pb-btn-wrapper">
+          <button class="pb-pay-btn" id="pbPayBtn">
+            <div class="pb-btn-content" id="pbBtnContent">
+              <span class="pb-btn-text">Pay Now</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <div class="pb-footer">
+        <p>Apex National Bank</p>
+        <p>&copy; 2025 All rights reserved</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .pb-widget {
+    width: 100%;
+    height: 100%;
+    min-height: 100vh;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    background: #ffffff;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .pb-widget * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  .pb-shell {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    border-radius: 16px;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    overflow: hidden;
+  }
+
+  .pb-container {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    min-height: 400px;
+  }
+
+  .pb-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .pb-title {
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+    color: #000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .pb-subtitle {
+    margin-top: 0.5rem !important;
+    font-size: 0.875rem !important;
+    color: #6b7280 !important;
+  }
+
+  .pb-card {
+    flex: 1;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    background: #fff;
+  }
+
+  .pb-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .pb-label {
+    color: #6b7280;
+  }
+
+  .pb-value {
+    font-weight: 500;
+    color: #000;
+  }
+
+  .pb-divider {
+    border-top: 1px solid #f3f4f6;
+    padding-top: 0.75rem;
+    margin-top: 0.75rem;
+  }
+
+  .pb-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .pb-total-label {
+    font-weight: 500;
+    color: #000;
+  }
+
+  .pb-total-value {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #000;
+  }
+
+  .pb-btn-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .pb-pay-btn {
+    position: relative;
+    overflow: hidden;
+    min-width: 220px;
+    min-height: 56px;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 0.5rem;
+    background-color: #000;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.4s ease;
+  }
+
+  .pb-pay-btn:focus-visible {
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px #000;
+  }
+
+  .pb-pay-btn:disabled {
+    cursor: not-allowed;
+  }
+
+  .pb-pay-btn.pb-success {
+    background-color: #16a34a;
+    animation: pb-bounce 0.4s ease;
+  }
+
+  @keyframes pb-bounce {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+
+  .pb-ripple {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(0);
+    animation: pb-ripple-expand 0.6s ease-out forwards;
+    pointer-events: none;
+  }
+
+  @keyframes pb-ripple-expand {
+    to {
+      transform: scale(40);
+      opacity: 0;
+    }
+  }
+
+  .pb-btn-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .pb-btn-text {
+    animation: pb-fadeInUp 0.2s ease forwards;
+  }
+
+  @keyframes pb-fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .pb-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #fff;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: pb-spin 0.8s linear infinite;
+  }
+
+  @keyframes pb-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .pb-success-content {
+    animation: pb-popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  @keyframes pb-popIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .pb-checkmark-path {
+    stroke-dasharray: 30;
+    stroke-dashoffset: 30;
+    animation: pb-drawCheck 0.4s 0.1s ease-out forwards;
+  }
+
+  @keyframes pb-drawCheck {
+    to { stroke-dashoffset: 0; }
+  }
+
+  .pb-confetti-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 99999;
+    overflow: hidden;
+  }
+
+  .pb-confetti-piece {
+    position: absolute;
+    width: 8px;
+    height: 14px;
+    border-radius: 2px;
+    opacity: 0;
+    animation: pb-confetti-fall linear forwards;
+  }
+
+  @keyframes pb-confetti-fall {
+    0% {
+      opacity: 1;
+      transform: translateY(0) rotate(0deg) scale(1);
+    }
+    75% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(100vh) rotate(720deg) scale(0.3);
+    }
+  }
+
+  .pb-footer {
+    margin-top: 2rem;
+    text-align: center;
+    font-size: 0.75rem;
+    color: #9ca3af;
+  }
+
+  .pb-footer p + p {
+    margin-top: 0.25rem;
+  }
+</style>
+
+<script>
+(function() {
+  var pbState = "idle";
+
+  var pbConfettiColors = [
+    "#000000", "#333333", "#666666", "#999999",
+    "#16a34a", "#22c55e", "#4ade80",
+    "#ffffff"
+  ];
+
+  function pbLaunchConfetti() {
+    var container = document.createElement("div");
+    container.className = "pb-confetti-container";
+    document.body.appendChild(container);
+
+    var count = 60;
+
+    for (var i = 0; i < count; i++) {
+      var piece = document.createElement("div");
+      piece.className = "pb-confetti-piece";
+
+      var color = pbConfettiColors[Math.floor(Math.random() * pbConfettiColors.length)];
+      var left = Math.random() * 100;
+      var delay = Math.random() * 0.4;
+      var duration = 1.5 + Math.random() * 1.5;
+      var size = 6 + Math.random() * 8;
+
+      piece.style.backgroundColor = color;
+      piece.style.left = left + "%";
+      piece.style.top = "-20px";
+      piece.style.width = size + "px";
+      piece.style.height = size * 1.6 + "px";
+      piece.style.borderRadius = Math.random() > 0.5 ? "50%" : "2px";
+      piece.style.animation = "pb-confetti-fall " + duration + "s " + delay + "s linear forwards";
+
+      container.appendChild(piece);
+    }
+
+    setTimeout(function() { container.remove(); }, 3500);
+  }
+
+  function pbHandlePay(e) {
+    if (pbState !== "idle") return;
+
+    var btn = document.getElementById("pbPayBtn");
+    var content = document.getElementById("pbBtnContent");
+    var rect = btn.getBoundingClientRect();
+
+    // Ripple
+    var ripple = document.createElement("span");
+    ripple.className = "pb-ripple";
+    ripple.style.left = (e.clientX - rect.left - 5) + "px";
+    ripple.style.top = (e.clientY - rect.top - 5) + "px";
+    btn.appendChild(ripple);
+    setTimeout(function() { ripple.remove(); }, 600);
+
+    // Processing
+    pbState = "processing";
+    btn.disabled = true;
+    content.innerHTML = "";
+    var spinner = document.createElement("div");
+    spinner.className = "pb-spinner";
+    content.appendChild(spinner);
+
+    // Success after delay
+    setTimeout(function() {
+      pbState = "success";
+      btn.classList.add("pb-success");
+
+      content.innerHTML = "";
+      var successWrap = document.createElement("div");
+      successWrap.className = "pb-btn-content pb-success-content";
+      successWrap.innerHTML =
+        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none">' +
+        '<path class="pb-checkmark-path" d="M5 13l4 4L19 7" ' +
+        'stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />' +
+        '</svg>' +
+        '<span>Payment Successful</span>';
+      content.appendChild(successWrap);
+
+      pbLaunchConfetti();
+
+      // Auto reset
+      setTimeout(function() { pbReset(); }, 3000);
+    }, 1200);
+  }
+
+  function pbReset() {
+    var btn = document.getElementById("pbPayBtn");
+    var content = document.getElementById("pbBtnContent");
+
+    btn.classList.remove("pb-success");
+    btn.disabled = false;
+    content.innerHTML = '<span class="pb-btn-text">Pay Now</span>';
+    pbState = "idle";
+  }
+
+  // Attach click handler
+  document.getElementById("pbPayBtn").addEventListener("click", pbHandlePay);
+})();
+</script>
