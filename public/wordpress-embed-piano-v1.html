@@ -1,0 +1,397 @@
+<!--
+  WORDPRESS EMBED — Daily UI v1: Minimal Piano
+
+  HOW TO USE:
+  1) In WordPress, add a "Custom HTML" block
+  2) Paste this entire snippet
+  3) Preview/publish
+-->
+
+<div class="piano-widget" id="pianoWidgetV1">
+  <div class="piano-card">
+    <div class="piano-head">
+      <p class="piano-title">Mini Piano</p>
+      <button class="icon-btn" id="infoBtn" type="button" aria-label="Open instructions" title="Instructions">i</button>
+      <div class="tooltip" id="infoTip" role="status" aria-live="polite">
+        Click keys or press 1 2 3 4 5 6 7 8 on your keyboard.
+      </div>
+    </div>
+
+    <div class="piano-wrap">
+      <div class="piano-keys" id="pianoKeys"></div>
+    </div>
+
+    <div class="piano-footer">
+      <p class="sequence" id="sequenceText">-</p>
+      <div class="controls">
+        <button class="icon-btn" id="playBtn" type="button" aria-label="Play recording" title="Play recording">&#9654;</button>
+        <button class="icon-btn" id="clearBtn" type="button" aria-label="Clear recording" title="Clear recording">&#128465;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .piano-widget,
+  .piano-widget * {
+    box-sizing: border-box;
+  }
+
+  .piano-widget {
+    width: 100%;
+    max-width: 460px;
+    margin: 0 auto;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+    color: #000;
+  }
+
+  .piano-card {
+    border: 1px solid #d4d4d8;
+    border-radius: 14px;
+    background: #fff;
+    padding: 14px;
+  }
+
+  .piano-head {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .piano-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 650;
+    letter-spacing: 0.02em;
+  }
+
+  .tooltip {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    width: 260px;
+    max-width: calc(100vw - 48px);
+    border: 1px solid #d4d4d8;
+    border-radius: 10px;
+    background: #fff;
+    color: #27272a;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    padding: 8px 10px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-4px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 10;
+  }
+
+  .tooltip.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  .piano-wrap {
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .piano-keys {
+    position: relative;
+    width: 332px;
+    height: 140px;
+    background: #0a0a0a;
+    border-radius: 10px;
+    border: 1px solid #27272a;
+    padding: 8px;
+  }
+
+  .key {
+    position: absolute;
+    border: 1px solid #a1a1aa;
+    cursor: pointer;
+    transition: transform 0.06s ease, background-color 0.1s ease;
+    user-select: none;
+  }
+
+  .key:active {
+    transform: translateY(1px);
+  }
+
+  .key.white {
+    width: 40px;
+    height: 112px;
+    bottom: 8px;
+    background: #fff;
+    border-radius: 0 0 6px 6px;
+  }
+
+  .key.white.active {
+    background: #e4e4e7;
+  }
+
+  .key.black {
+    width: 24px;
+    height: 70px;
+    top: 8px;
+    background: #09090b;
+    border-color: #27272a;
+    color: #fff;
+    border-radius: 0 0 4px 4px;
+    z-index: 2;
+  }
+
+  .key.black.active {
+    background: #27272a;
+  }
+
+  .label {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 8px;
+    font-size: 10px;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    opacity: 0.8;
+  }
+
+  .key.white .label {
+    color: #3f3f46;
+  }
+
+  .key.black .label {
+    color: #fafafa;
+  }
+
+  .piano-footer {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .sequence {
+    margin: 0;
+    min-height: 20px;
+    font-size: 0.78rem;
+    color: #3f3f46;
+    letter-spacing: 0.08em;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+      "Liberation Mono", "Courier New", monospace;
+  }
+
+  .controls {
+    display: flex;
+    gap: 8px;
+  }
+
+  .icon-btn {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #d4d4d8;
+    border-radius: 999px;
+    background: #fff;
+    color: #111827;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .icon-btn:hover {
+    background: #f4f4f5;
+  }
+
+  .icon-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+</style>
+
+<script>
+  (function () {
+    var root = document.getElementById("pianoWidgetV1");
+    if (!root) return;
+
+    var infoBtn = root.querySelector("#infoBtn");
+    var infoTip = root.querySelector("#infoTip");
+    var pianoKeysWrap = root.querySelector("#pianoKeys");
+    var sequenceText = root.querySelector("#sequenceText");
+    var playBtn = root.querySelector("#playBtn");
+    var clearBtn = root.querySelector("#clearBtn");
+
+    var whiteWidth = 40;
+    var blackWidth = 24;
+
+    var keys = [
+      { id: "c4", note: "C4", freq: 261.63, black: false, left: 8, label: "1" },
+      { id: "c4s", note: "C#4", freq: 277.18, black: true, left: 8 + whiteWidth - blackWidth / 2, label: "2" },
+      { id: "d4", note: "D4", freq: 293.66, black: false, left: 8 + whiteWidth, label: "3" },
+      { id: "d4s", note: "D#4", freq: 311.13, black: true, left: 8 + whiteWidth * 2 - blackWidth / 2, label: "4" },
+      { id: "e4", note: "E4", freq: 329.63, black: false, left: 8 + whiteWidth * 2, label: "5" },
+      { id: "f4", note: "F4", freq: 349.23, black: false, left: 8 + whiteWidth * 3, label: "6" },
+      { id: "f4s", note: "F#4", freq: 369.99, black: true, left: 8 + whiteWidth * 4 - blackWidth / 2, label: "7" },
+      { id: "g4", note: "G4", freq: 392.0, black: false, left: 8 + whiteWidth * 4, label: "8" }
+    ];
+
+    var keyByLabel = {};
+    var keyElById = {};
+    var recorded = [];
+    var playingBack = false;
+    var playbackTimers = [];
+    var audioCtx = null;
+    var masterGain = null;
+
+    function ensureAudio() {
+      if (!audioCtx) {
+        var AudioCtor = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtor) return null;
+        audioCtx = new AudioCtor();
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = 0.14;
+        masterGain.connect(audioCtx.destination);
+      }
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function setSequenceText() {
+      sequenceText.textContent = recorded.length ? recorded.map(function (k) { return k.label; }).join("") : "-";
+    }
+
+    function updateButtons() {
+      playBtn.disabled = playingBack || recorded.length === 0;
+      clearBtn.disabled = recorded.length === 0;
+    }
+
+    function flashKey(id) {
+      var el = keyElById[id];
+      if (!el) return;
+      el.classList.add("active");
+      setTimeout(function () {
+        el.classList.remove("active");
+      }, 120);
+    }
+
+    function playTone(key, record) {
+      var ctx = ensureAudio();
+      if (!ctx || !masterGain) return;
+
+      var now = ctx.currentTime;
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(key.freq, now);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.35, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.26);
+
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.28);
+
+      flashKey(key.id);
+
+      if (record) {
+        if (recorded.length >= 64) recorded.shift();
+        recorded.push(key);
+        setSequenceText();
+        updateButtons();
+      }
+    }
+
+    function stopPlayback() {
+      playbackTimers.forEach(function (id) { clearTimeout(id); });
+      playbackTimers = [];
+      playingBack = false;
+      updateButtons();
+    }
+
+    function playRecording() {
+      if (!recorded.length || playingBack) return;
+      playingBack = true;
+      updateButtons();
+
+      var step = 260;
+      recorded.forEach(function (key, i) {
+        var t = setTimeout(function () {
+          playTone(key, false);
+        }, i * step);
+        playbackTimers.push(t);
+      });
+
+      var end = setTimeout(function () {
+        stopPlayback();
+      }, recorded.length * step + 20);
+      playbackTimers.push(end);
+    }
+
+    function clearRecording() {
+      stopPlayback();
+      recorded = [];
+      setSequenceText();
+      updateButtons();
+    }
+
+    keys.forEach(function (key) {
+      keyByLabel[key.label] = key;
+      var el = document.createElement("button");
+      el.type = "button";
+      el.className = "key " + (key.black ? "black" : "white");
+      el.style.left = key.left + "px";
+      el.setAttribute("aria-label", key.note + " key");
+
+      var label = document.createElement("span");
+      label.className = "label";
+      label.textContent = key.label;
+      el.appendChild(label);
+
+      el.addEventListener("click", function () {
+        playTone(key, true);
+      });
+
+      pianoKeysWrap.appendChild(el);
+      keyElById[key.id] = el;
+    });
+
+    infoBtn.addEventListener("click", function () {
+      infoTip.classList.toggle("show");
+    });
+
+    playBtn.addEventListener("click", playRecording);
+    clearBtn.addEventListener("click", clearRecording);
+
+    window.addEventListener("keydown", function (event) {
+      if (event.repeat) return;
+      var key = keyByLabel[event.key];
+      if (!key) return;
+      event.preventDefault();
+      playTone(key, true);
+    });
+
+    document.addEventListener("click", function (event) {
+      if (!root.contains(event.target)) return;
+      if (event.target === infoBtn || infoBtn.contains(event.target)) return;
+      if (event.target === infoTip || infoTip.contains(event.target)) return;
+      infoTip.classList.remove("show");
+    });
+
+    setSequenceText();
+    updateButtons();
+  })();
+</script>
