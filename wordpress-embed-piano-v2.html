@@ -1,0 +1,418 @@
+<!--
+  WORDPRESS EMBED — Daily UI v2: Refined Mono Piano
+
+  HOW TO USE:
+  1) Add a "Custom HTML" block in WordPress
+  2) Paste this entire snippet
+  3) Preview/publish
+-->
+
+<div class="piano-v2-widget" id="pianoWidgetV2">
+  <div class="piano-v2-card">
+    <div class="piano-v2-head">
+      <div>
+        <p class="piano-v2-eyebrow">Daily UI</p>
+        <p class="piano-v2-title">Refined Mini Piano</p>
+      </div>
+      <button class="piano-v2-icon" id="pianoInfoBtn" type="button" aria-label="Show instructions" title="Instructions">i</button>
+      <div class="piano-v2-tip" id="pianoInfoTip" role="status" aria-live="polite">
+        Play by click or keyboard. Primary row: A W S E D F T G Y H U J K. Alternate quick keys: 1 2 3 4 5 6 7 8 9.
+      </div>
+    </div>
+
+    <div class="piano-v2-stage">
+      <div class="piano-v2-keys" id="pianoV2Keys"></div>
+    </div>
+
+    <div class="piano-v2-bottom">
+      <p class="piano-v2-seq" id="pianoV2Seq">-</p>
+      <div class="piano-v2-actions">
+        <button class="piano-v2-icon" id="pianoV2Play" type="button" aria-label="Play recording" title="Play recording">&#9654;</button>
+        <button class="piano-v2-icon" id="pianoV2Clear" type="button" aria-label="Clear recording" title="Clear recording">&#128465;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .piano-v2-widget,
+  .piano-v2-widget * {
+    box-sizing: border-box;
+  }
+
+  .piano-v2-widget {
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+    color: #111;
+  }
+
+  .piano-v2-card {
+    background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+    border: 1px solid #e4e4e7;
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.07);
+  }
+
+  .piano-v2-head {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .piano-v2-eyebrow {
+    margin: 0;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #71717a;
+    font-weight: 700;
+  }
+
+  .piano-v2-title {
+    margin: 2px 0 0;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #111827;
+  }
+
+  .piano-v2-tip {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    width: 300px;
+    max-width: calc(100vw - 48px);
+    border: 1px solid #d4d4d8;
+    background: #fff;
+    color: #27272a;
+    border-radius: 12px;
+    font-size: 12px;
+    line-height: 1.4;
+    padding: 10px;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+    opacity: 0;
+    transform: translateY(-4px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 20;
+  }
+
+  .piano-v2-tip.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .piano-v2-stage {
+    border: 1px solid #27272a;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #111827 0%, #09090b 100%);
+    padding: 10px;
+    overflow-x: auto;
+  }
+
+  .piano-v2-keys {
+    position: relative;
+    width: 486px;
+    height: 170px;
+  }
+
+  .piano-v2-key {
+    position: absolute;
+    user-select: none;
+    border: 1px solid #a1a1aa;
+    cursor: pointer;
+    transition: background-color 0.1s ease, transform 0.05s ease;
+  }
+
+  .piano-v2-key:active {
+    transform: translateY(1px);
+  }
+
+  .piano-v2-key.white {
+    width: 52px;
+    height: 146px;
+    bottom: 0;
+    background: linear-gradient(180deg, #ffffff 0%, #f4f4f5 100%);
+    border-radius: 0 0 8px 8px;
+    box-shadow: inset 0 -6px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .piano-v2-key.white.active {
+    background: linear-gradient(180deg, #f5f5f5 0%, #e4e4e7 100%);
+  }
+
+  .piano-v2-key.black {
+    width: 30px;
+    height: 92px;
+    top: 0;
+    z-index: 2;
+    background: linear-gradient(180deg, #09090b 0%, #27272a 100%);
+    border-color: #3f3f46;
+    border-radius: 0 0 6px 6px;
+  }
+
+  .piano-v2-key.black.active {
+    background: linear-gradient(180deg, #3f3f46 0%, #52525b 100%);
+  }
+
+  .piano-v2-label {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 9px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    opacity: 0.85;
+    line-height: 1;
+  }
+
+  .piano-v2-key.white .piano-v2-label {
+    color: #3f3f46;
+  }
+
+  .piano-v2-key.black .piano-v2-label {
+    color: #f5f5f5;
+    bottom: 7px;
+  }
+
+  .piano-v2-bottom {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .piano-v2-seq {
+    margin: 0;
+    min-height: 18px;
+    color: #52525b;
+    letter-spacing: 0.08em;
+    font-size: 12px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+      "Liberation Mono", "Courier New", monospace;
+  }
+
+  .piano-v2-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .piano-v2-icon {
+    width: 34px;
+    height: 34px;
+    border: 1px solid #d4d4d8;
+    border-radius: 999px;
+    background: #fff;
+    color: #111827;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .piano-v2-icon:hover {
+    background: #f4f4f5;
+    border-color: #a1a1aa;
+  }
+
+  .piano-v2-icon:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+</style>
+
+<script>
+  (function () {
+    var root = document.getElementById("pianoWidgetV2");
+    if (!root) return;
+
+    var infoBtn = root.querySelector("#pianoInfoBtn");
+    var infoTip = root.querySelector("#pianoInfoTip");
+    var keysWrap = root.querySelector("#pianoV2Keys");
+    var seqText = root.querySelector("#pianoV2Seq");
+    var playBtn = root.querySelector("#pianoV2Play");
+    var clearBtn = root.querySelector("#pianoV2Clear");
+
+    var whiteWidth = 52;
+    var blackWidth = 30;
+    var leftPad = 9;
+
+    var keys = [
+      { id: "c4", note: "C4", freq: 261.63, black: false, left: leftPad + whiteWidth * 0, label: "A", alt: "1" },
+      { id: "c4s", note: "C#4", freq: 277.18, black: true, left: leftPad + whiteWidth * 1 - blackWidth / 2, label: "W", alt: "2" },
+      { id: "d4", note: "D4", freq: 293.66, black: false, left: leftPad + whiteWidth * 1, label: "S", alt: "3" },
+      { id: "d4s", note: "D#4", freq: 311.13, black: true, left: leftPad + whiteWidth * 2 - blackWidth / 2, label: "E", alt: "4" },
+      { id: "e4", note: "E4", freq: 329.63, black: false, left: leftPad + whiteWidth * 2, label: "D", alt: "5" },
+      { id: "f4", note: "F4", freq: 349.23, black: false, left: leftPad + whiteWidth * 3, label: "F", alt: "6" },
+      { id: "f4s", note: "F#4", freq: 369.99, black: true, left: leftPad + whiteWidth * 4 - blackWidth / 2, label: "T", alt: "7" },
+      { id: "g4", note: "G4", freq: 392.0, black: false, left: leftPad + whiteWidth * 4, label: "G", alt: "8" },
+      { id: "g4s", note: "G#4", freq: 415.3, black: true, left: leftPad + whiteWidth * 5 - blackWidth / 2, label: "Y", alt: "9" },
+      { id: "a4", note: "A4", freq: 440.0, black: false, left: leftPad + whiteWidth * 5, label: "H", alt: "0" },
+      { id: "a4s", note: "A#4", freq: 466.16, black: true, left: leftPad + whiteWidth * 6 - blackWidth / 2, label: "U", alt: "-" },
+      { id: "b4", note: "B4", freq: 493.88, black: false, left: leftPad + whiteWidth * 6, label: "J", alt: "=" },
+      { id: "c5", note: "C5", freq: 523.25, black: false, left: leftPad + whiteWidth * 7, label: "K", alt: null }
+    ];
+
+    var lookup = {};
+    var keyNodeById = {};
+    var audioCtx = null;
+    var masterGain = null;
+    var recorded = [];
+    var playingBack = false;
+    var playbackTimers = [];
+
+    function ensureAudio() {
+      if (!audioCtx) {
+        var AudioCtor = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtor) return null;
+        audioCtx = new AudioCtor();
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = 0.14;
+        masterGain.connect(audioCtx.destination);
+      }
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      return audioCtx;
+    }
+
+    function refreshSeq() {
+      seqText.textContent = recorded.length ? recorded.map(function (k) { return k.label; }).join(" ") : "-";
+    }
+
+    function refreshButtons() {
+      playBtn.disabled = playingBack || !recorded.length;
+      clearBtn.disabled = !recorded.length;
+    }
+
+    function flash(id) {
+      var node = keyNodeById[id];
+      if (!node) return;
+      node.classList.add("active");
+      setTimeout(function () {
+        node.classList.remove("active");
+      }, 120);
+    }
+
+    function playTone(key, shouldRecord) {
+      var ctx = ensureAudio();
+      if (!ctx || !masterGain) return;
+
+      var now = ctx.currentTime;
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(key.freq, now);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.34, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
+
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.27);
+
+      flash(key.id);
+
+      if (shouldRecord) {
+        if (recorded.length >= 80) recorded.shift();
+        recorded.push(key);
+        refreshSeq();
+        refreshButtons();
+      }
+    }
+
+    function stopPlayback() {
+      playbackTimers.forEach(function (t) { clearTimeout(t); });
+      playbackTimers = [];
+      playingBack = false;
+      refreshButtons();
+    }
+
+    function playRecording() {
+      if (!recorded.length || playingBack) return;
+      playingBack = true;
+      refreshButtons();
+
+      var step = 240;
+      recorded.forEach(function (key, i) {
+        var t = setTimeout(function () {
+          playTone(key, false);
+        }, i * step);
+        playbackTimers.push(t);
+      });
+
+      var done = setTimeout(function () {
+        stopPlayback();
+      }, recorded.length * step + 24);
+      playbackTimers.push(done);
+    }
+
+    function clearRecording() {
+      stopPlayback();
+      recorded = [];
+      refreshSeq();
+      refreshButtons();
+    }
+
+    keys.forEach(function (key) {
+      lookup[key.label.toLowerCase()] = key;
+      if (key.alt) lookup[key.alt] = key;
+
+      var node = document.createElement("button");
+      node.type = "button";
+      node.className = "piano-v2-key " + (key.black ? "black" : "white");
+      node.style.left = key.left + "px";
+      node.setAttribute("aria-label", key.note + " key");
+
+      var label = document.createElement("span");
+      label.className = "piano-v2-label";
+      label.textContent = key.label;
+      node.appendChild(label);
+
+      node.addEventListener("click", function () {
+        playTone(key, true);
+      });
+
+      keysWrap.appendChild(node);
+      keyNodeById[key.id] = node;
+    });
+
+    infoBtn.addEventListener("click", function () {
+      infoTip.classList.toggle("show");
+    });
+
+    playBtn.addEventListener("click", playRecording);
+    clearBtn.addEventListener("click", clearRecording);
+
+    window.addEventListener("keydown", function (event) {
+      if (event.repeat) return;
+      var key = lookup[event.key.toLowerCase()] || lookup[event.key];
+      if (!key) return;
+      event.preventDefault();
+      playTone(key, true);
+    });
+
+    document.addEventListener("click", function (event) {
+      if (!root.contains(event.target)) {
+        infoTip.classList.remove("show");
+      }
+    });
+
+    refreshSeq();
+    refreshButtons();
+  })();
+</script>

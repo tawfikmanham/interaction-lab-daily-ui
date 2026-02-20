@@ -1,0 +1,498 @@
+<!--
+  WORDPRESS EMBED — Piano (Clean v3)
+
+  HOW TO USE:
+  1) Add a "Custom HTML" block in WordPress
+  2) Paste this entire snippet
+  3) Preview/publish
+-->
+
+<div class="p3-widget" id="p3Widget">
+  <div class="p3-card">
+    <div class="p3-head">
+      <p class="p3-title">Play Piano</p>
+      <button class="p3-icon" id="p3InfoBtn" type="button" aria-label="Show keyboard shortcuts" title="Shortcuts">i</button>
+      <div class="p3-tip" id="p3Tip" role="status" aria-live="polite">
+        Keys: A W S E D F T G Y H U J K (or 1 2 3 4 5 6 7 8 9 0 - =). Press Enter to replay typed keys. Press Space/Delete/Backspace to clear.
+      </div>
+    </div>
+
+    <div class="p3-shell">
+      <div class="p3-surface">
+        <div class="p3-keys" id="p3Keys"></div>
+      </div>
+    </div>
+
+    <div class="p3-footer">
+      <div class="p3-seq-wrap">
+        <p class="p3-seq" id="p3Seq">Start playing...</p>
+        <p class="p3-hint" id="p3Hint">Enter replay: -</p>
+      </div>
+      <div class="p3-actions">
+        <button class="p3-icon" id="p3PlayBtn" type="button" aria-label="Play recording" title="Play">&#9654;</button>
+        <button class="p3-icon" id="p3ClearBtn" type="button" aria-label="Clear" title="Clear">&#9003;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .p3-widget,
+  .p3-widget * {
+    box-sizing: border-box;
+  }
+
+  .p3-widget {
+    width: 100%;
+    height: 100%;
+    min-height: 100vh;
+    margin: 0 auto;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .p3-card {
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 auto;
+    border: 1px solid #d4d4d8;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.08);
+    padding: 14px;
+  }
+
+  .p3-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    position: relative;
+  }
+
+  .p3-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #09090b;
+  }
+
+  .p3-tip {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    width: 320px;
+    max-width: calc(100vw - 48px);
+    border: 1px solid #d4d4d8;
+    border-radius: 12px;
+    background: #fff;
+    color: #3f3f46;
+    font-size: 12px;
+    line-height: 1.45;
+    padding: 10px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    transform: translateY(-4px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 10;
+  }
+
+  .p3-tip.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .p3-shell {
+    margin-top: 12px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .p3-surface {
+    width: max-content;
+    margin: 0 auto;
+    border: 1px solid #18181b;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #111827 0%, #09090b 100%);
+    padding: 12px;
+  }
+
+  .p3-keys {
+    position: relative;
+    width: 432px;
+    height: 182px;
+  }
+
+  .p3-key {
+    position: absolute;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.1s ease, transform 0.05s ease;
+  }
+
+  .p3-key:active {
+    transform: translateY(1px);
+  }
+
+  .p3-white {
+    width: 54px;
+    height: 156px;
+    bottom: 0;
+    border-radius: 0 0 8px 8px;
+    border: 1px solid #a1a1aa;
+    background: linear-gradient(180deg, #ffffff 0%, #f4f4f5 100%);
+    box-shadow: inset 0 -6px 10px rgba(0, 0, 0, 0.08);
+  }
+
+  .p3-white.active {
+    background: linear-gradient(180deg, #e5e7eb 0%, #d4d4d8 100%);
+  }
+
+  .p3-black {
+    width: 32px;
+    height: 96px;
+    top: 0;
+    z-index: 5;
+    border-radius: 0 0 6px 6px;
+    border: 1px solid #3f3f46;
+    background: linear-gradient(180deg, #09090b 0%, #27272a 100%);
+  }
+
+  .p3-black.active {
+    background: linear-gradient(180deg, #52525b 0%, #71717a 100%);
+  }
+
+  .p3-note {
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    font-weight: 600;
+    color: #71717a;
+  }
+
+  .p3-label {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #3f3f46;
+  }
+
+  .p3-black .p3-label {
+    bottom: 8px;
+    font-size: 10px;
+    color: #f5f5f5;
+  }
+
+  .p3-footer {
+    margin-top: 12px;
+    border: 1px solid #e4e4e7;
+    border-radius: 10px;
+    background: #fff;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .p3-seq-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .p3-seq {
+    margin: 0;
+    min-height: 18px;
+    color: #3f3f46;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+      "Liberation Mono", "Courier New", monospace;
+  }
+
+  .p3-hint {
+    margin: 0;
+    color: #71717a;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+  }
+
+  .p3-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .p3-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    border: 1px solid #d4d4d8;
+    background: #fff;
+    color: #111827;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .p3-icon:hover {
+    background: #f4f4f5;
+    border-color: #a1a1aa;
+  }
+
+  .p3-icon:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  @media (max-width: 640px) {
+    .p3-title {
+      font-size: 18px;
+    }
+
+    .p3-tip {
+      width: 270px;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    var root = document.getElementById("p3Widget");
+    if (!root) return;
+
+    var infoBtn = root.querySelector("#p3InfoBtn");
+    var tip = root.querySelector("#p3Tip");
+    var keysWrap = root.querySelector("#p3Keys");
+    var seqEl = root.querySelector("#p3Seq");
+    var hintEl = root.querySelector("#p3Hint");
+    var playBtn = root.querySelector("#p3PlayBtn");
+    var clearBtn = root.querySelector("#p3ClearBtn");
+
+    var WHITE_WIDTH = 54;
+    var BLACK_WIDTH = 32;
+    var BLACK_OFFSET = BLACK_WIDTH / 2;
+
+    var keys = [
+      { id: "c4", note: "C4", freq: 261.63, black: false, left: 0, label: "A", alt: "1" },
+      { id: "c4s", note: "C#4", freq: 277.18, black: true, left: WHITE_WIDTH - BLACK_OFFSET, label: "W", alt: "2" },
+      { id: "d4", note: "D4", freq: 293.66, black: false, left: WHITE_WIDTH, label: "S", alt: "3" },
+      { id: "d4s", note: "D#4", freq: 311.13, black: true, left: WHITE_WIDTH * 2 - BLACK_OFFSET, label: "E", alt: "4" },
+      { id: "e4", note: "E4", freq: 329.63, black: false, left: WHITE_WIDTH * 2, label: "D", alt: "5" },
+      { id: "f4", note: "F4", freq: 349.23, black: false, left: WHITE_WIDTH * 3, label: "F", alt: "6" },
+      { id: "f4s", note: "F#4", freq: 369.99, black: true, left: WHITE_WIDTH * 4 - BLACK_OFFSET, label: "T", alt: "7" },
+      { id: "g4", note: "G4", freq: 392.0, black: false, left: WHITE_WIDTH * 4, label: "G", alt: "8" },
+      { id: "g4s", note: "G#4", freq: 415.3, black: true, left: WHITE_WIDTH * 5 - BLACK_OFFSET, label: "Y", alt: "9" },
+      { id: "a4", note: "A4", freq: 440.0, black: false, left: WHITE_WIDTH * 5, label: "H", alt: "0" },
+      { id: "a4s", note: "A#4", freq: 466.16, black: true, left: WHITE_WIDTH * 6 - BLACK_OFFSET, label: "U", alt: "-" },
+      { id: "b4", note: "B4", freq: 493.88, black: false, left: WHITE_WIDTH * 6, label: "J", alt: "=" },
+      { id: "c5", note: "C5", freq: 523.25, black: false, left: WHITE_WIDTH * 7, label: "K", alt: null }
+    ];
+
+    var lookup = {};
+    var keyNodeById = {};
+    var recorded = [];
+    var typedQueue = [];
+    var playing = false;
+    var timers = [];
+
+    var audioCtx = null;
+    var masterGain = null;
+
+    function ensureAudio() {
+      if (!audioCtx) {
+        var AudioCtor = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtor) return null;
+        audioCtx = new AudioCtor();
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = 0.14;
+        masterGain.connect(audioCtx.destination);
+      }
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      return audioCtx;
+    }
+
+    function renderText() {
+      seqEl.textContent = recorded.length
+        ? recorded.map(function (k) { return k.label; }).join(" ")
+        : "Start playing...";
+      hintEl.textContent = "Enter replay: " + (typedQueue.length
+        ? typedQueue.map(function (k) { return k.label; }).join(" ")
+        : "-");
+    }
+
+    function renderButtons() {
+      playBtn.disabled = playing || !recorded.length;
+      clearBtn.disabled = !recorded.length && !typedQueue.length;
+    }
+
+    function flash(id) {
+      var node = keyNodeById[id];
+      if (!node) return;
+      node.classList.add("active");
+      setTimeout(function () {
+        node.classList.remove("active");
+      }, 110);
+    }
+
+    function playTone(key, shouldRecord) {
+      var ctx = ensureAudio();
+      if (!ctx || !masterGain) return;
+
+      var now = ctx.currentTime;
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(key.freq, now);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.35, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.26);
+
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.28);
+
+      flash(key.id);
+
+      if (shouldRecord) {
+        if (recorded.length >= 80) recorded.shift();
+        recorded.push(key);
+      }
+    }
+
+    function stopPlayback() {
+      timers.forEach(function (id) { clearTimeout(id); });
+      timers = [];
+      playing = false;
+      renderButtons();
+    }
+
+    function playKeys(list) {
+      if (!list.length || playing) return;
+      playing = true;
+      renderButtons();
+
+      var step = 240;
+      list.forEach(function (key, idx) {
+        timers.push(setTimeout(function () {
+          playTone(key, false);
+        }, idx * step));
+      });
+
+      timers.push(setTimeout(function () {
+        stopPlayback();
+      }, list.length * step + 30));
+    }
+
+    function clearAll() {
+      stopPlayback();
+      recorded = [];
+      typedQueue = [];
+      renderText();
+      renderButtons();
+    }
+
+    keys.forEach(function (key) {
+      lookup[key.label.toLowerCase()] = key;
+      if (key.alt) lookup[key.alt] = key;
+
+      var node = document.createElement("button");
+      node.type = "button";
+      node.className = "p3-key " + (key.black ? "p3-black" : "p3-white");
+      node.style.left = key.left + "px";
+      node.setAttribute("aria-label", key.note + " key");
+
+      if (!key.black) {
+        var note = document.createElement("span");
+        note.className = "p3-note";
+        note.textContent = key.note;
+        node.appendChild(note);
+      }
+
+      var label = document.createElement("span");
+      label.className = "p3-label";
+      label.textContent = key.label;
+      node.appendChild(label);
+
+      node.addEventListener("click", function () {
+        playTone(key, true);
+        renderText();
+        renderButtons();
+      });
+
+      keysWrap.appendChild(node);
+      keyNodeById[key.id] = node;
+    });
+
+    infoBtn.addEventListener("click", function () {
+      tip.classList.toggle("show");
+    });
+
+    playBtn.addEventListener("click", function () {
+      playKeys(recorded);
+    });
+
+    clearBtn.addEventListener("click", clearAll);
+
+    window.addEventListener("keydown", function (event) {
+      if (event.repeat) return;
+
+      if (event.key === "Delete" || event.key === "Backspace" || event.key === " ") {
+        event.preventDefault();
+        clearAll();
+        return;
+      }
+
+      if (event.key === "Enter") {
+        event.preventDefault();
+        playKeys(typedQueue);
+        return;
+      }
+
+      var key = lookup[event.key.toLowerCase()] || lookup[event.key];
+      if (!key) return;
+
+      event.preventDefault();
+      playTone(key, true);
+
+      if (typedQueue.length >= 40) typedQueue.shift();
+      typedQueue.push(key);
+
+      renderText();
+      renderButtons();
+    });
+
+    document.addEventListener("click", function (event) {
+      if (!root.contains(event.target)) {
+        tip.classList.remove("show");
+      }
+    });
+
+    renderText();
+    renderButtons();
+  })();
+</script>
