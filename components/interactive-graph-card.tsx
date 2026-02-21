@@ -38,6 +38,11 @@ type AxisTickProps = {
   y?: number;
   payload?: { value?: string | number };
 };
+type ActiveDotProps = {
+  cx?: number;
+  cy?: number;
+  fill?: string;
+};
 
 type Tone = {
   line: string;
@@ -107,6 +112,21 @@ function AnimatedYAxisTick({ x = 0, y = 0, payload }: AxisTickProps) {
         {typeof payload?.value === "number" ? payload.value.toLocaleString() : payload?.value}
       </text>
     </motion.g>
+  );
+}
+
+function AnimatedActiveDot({ cx = 0, cy = 0, fill = "#111111" }: ActiveDotProps) {
+  return (
+    <motion.circle
+      r={6}
+      strokeWidth={2}
+      stroke="#ffffff"
+      fill={fill}
+      initial={false}
+      animate={{ cx, cy }}
+      transition={{ type: "spring", stiffness: 520, damping: 34, mass: 0.45 }}
+      style={{ pointerEvents: "none" }}
+    />
   );
 }
 
@@ -423,7 +443,7 @@ export function InteractiveGraphCard() {
                       fill={`url(#lineArea-${datasetKey})`}
                       stroke="none"
                       isAnimationActive={!isDragging}
-                      animationDuration={320}
+                      animationDuration={520}
                       animationEasing="ease-in-out"
                     />
 
@@ -433,15 +453,10 @@ export function InteractiveGraphCard() {
                       stroke={tone.line}
                       strokeWidth={hovered ? 3.8 : 3}
                       dot={false}
-                      activeDot={{
-                        r: 6,
-                        strokeWidth: 2,
-                        stroke: "#fff",
-                        fill: tone.line,
-                      }}
+                      activeDot={<AnimatedActiveDot fill={tone.line} />}
                       style={{ filter: `drop-shadow(0 0 12px ${tone.glow})`, transition: "stroke-width 120ms ease" }}
                       isAnimationActive={!isDragging}
-                      animationDuration={320}
+                      animationDuration={520}
                       animationEasing="ease-in-out"
                     />
                   </LineChart>
@@ -478,6 +493,7 @@ export function InteractiveGraphCard() {
                       fill={tone.line}
                       radius={[5, 5, 2, 2]}
                       fillOpacity={hovered ? 0.92 : 0.84}
+                      activeBar={false}
                       isAnimationActive={!isDragging}
                       animationDuration={260}
                       animationEasing="ease-in-out"
