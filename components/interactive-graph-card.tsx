@@ -50,22 +50,22 @@ type ChartMode = "line" | "bar";
 
 const DATASET_TONE: Record<DatasetKey, Tone> = {
   daily: {
-    line: "#0f766e",
-    glow: "rgba(15,118,110,0.35)",
-    areaStart: "rgba(15,118,110,0.32)",
-    areaEnd: "rgba(15,118,110,0.02)",
+    line: "#111111",
+    glow: "rgba(17,17,17,0.28)",
+    areaStart: "rgba(17,17,17,0.24)",
+    areaEnd: "rgba(17,17,17,0.02)",
   },
   weekly: {
-    line: "#1d4ed8",
-    glow: "rgba(29,78,216,0.35)",
-    areaStart: "rgba(29,78,216,0.32)",
-    areaEnd: "rgba(29,78,216,0.02)",
+    line: "#111111",
+    glow: "rgba(17,17,17,0.28)",
+    areaStart: "rgba(17,17,17,0.24)",
+    areaEnd: "rgba(17,17,17,0.02)",
   },
   monthly: {
-    line: "#b45309",
-    glow: "rgba(180,83,9,0.35)",
-    areaStart: "rgba(180,83,9,0.32)",
-    areaEnd: "rgba(180,83,9,0.02)",
+    line: "#111111",
+    glow: "rgba(17,17,17,0.28)",
+    areaStart: "rgba(17,17,17,0.24)",
+    areaEnd: "rgba(17,17,17,0.02)",
   },
 };
 
@@ -337,15 +337,15 @@ export function InteractiveGraphCard() {
           role="application"
           aria-label="Interactive chart, drag left or right to pan history"
         >
-          <div className="mb-2 flex justify-end">
-            <div className="flex items-center gap-0.5 rounded-lg bg-white/90 px-0.5 py-1">
+          <div className="pointer-events-none absolute left-1/2 top-2 z-20 -translate-x-1/2">
+            <div className="pointer-events-auto flex items-center gap-0.5 rounded-full bg-white/90 px-1 py-1">
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 onClick={goPrev}
                 disabled={panConfig.value <= panConfig.min}
-                className="h-7 w-7 rounded-md text-zinc-700 hover:bg-zinc-100"
+                className="h-7 w-7 rounded-full text-zinc-700 hover:bg-zinc-100"
                 aria-label="Previous timeframe"
               >
                 <span aria-hidden>‹</span>
@@ -370,7 +370,7 @@ export function InteractiveGraphCard() {
                 size="icon"
                 onClick={goNext}
                 disabled={panConfig.value >= panConfig.max}
-                className="h-7 w-7 rounded-md text-zinc-700 hover:bg-zinc-100"
+                className="h-7 w-7 rounded-full text-zinc-700 hover:bg-zinc-100"
                 aria-label="Next timeframe"
               >
                 <span aria-hidden>›</span>
@@ -378,13 +378,13 @@ export function InteractiveGraphCard() {
             </div>
           </div>
 
-          <div style={{ height: "calc(100% - 40px)" }}>
+          <div className="h-full">
             {mounted ? (
               <ResponsiveContainer width="100%" height="100%">
                 {chartMode === "line" ? (
                   <LineChart
                     data={activeData}
-                    margin={{ top: 14, right: 10, left: 10, bottom: 6 }}
+                    margin={{ top: 46, right: 10, left: 10, bottom: 18 }}
                     onMouseEnter={() => setHovered(true)}
                     onMouseLeave={() => setHovered(false)}
                   >
@@ -448,7 +448,7 @@ export function InteractiveGraphCard() {
                 ) : (
                   <BarChart
                     data={activeData}
-                    margin={{ top: 14, right: 10, left: 10, bottom: 6 }}
+                    margin={{ top: 46, right: 10, left: 10, bottom: 18 }}
                     onMouseEnter={() => setHovered(true)}
                     onMouseLeave={() => setHovered(false)}
                   >
