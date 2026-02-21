@@ -213,8 +213,8 @@ export function InteractiveGraphCard() {
   };
 
   return (
-    <Card className="w-full rounded-2xl border-zinc-200/90 bg-white/95 shadow-[0_12px_40px_-18px_rgba(15,23,42,0.25)]">
-      <CardHeader className="space-y-3 pb-3">
+    <Card className="w-full rounded-[28px] border-zinc-200/90 bg-white/95 shadow-none">
+      <CardHeader className="space-y-3 px-6 pt-7 pb-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-0.5">
             <CardTitle className="text-lg text-zinc-900">Revenue Performance</CardTitle>
@@ -315,7 +315,7 @@ export function InteractiveGraphCard() {
 
       <CardContent>
         <div
-          className={`relative h-[320px] select-none rounded-xl border border-zinc-200 p-3 outline-none ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
+          className={`relative h-[320px] select-none rounded-[20px] border border-zinc-200 p-3 outline-none ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
           style={{ touchAction: "none" }}
           onPointerDown={(event) => {
             event.preventDefault();
