@@ -219,6 +219,11 @@ export function InteractiveGraphCard() {
     setIsDragging(true);
   };
 
+  const isTimelineControlTarget = (target: EventTarget | null) => {
+    if (!(target instanceof HTMLElement)) return false;
+    return Boolean(target.closest("[data-timeline-controls='true']"));
+  };
+
   const onDragMove = (x: number) => {
     if (dragStartXRef.current === null) return;
     const delta = x - dragStartXRef.current;
@@ -338,6 +343,7 @@ export function InteractiveGraphCard() {
           className={`relative h-[320px] select-none rounded-xl border border-zinc-200 p-3 outline-none ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
           style={{ touchAction: "none" }}
           onPointerDown={(event) => {
+            if (isTimelineControlTarget(event.target)) return;
             event.preventDefault();
             event.currentTarget.setPointerCapture(event.pointerId);
             onDragStart(event.clientX);
@@ -358,7 +364,10 @@ export function InteractiveGraphCard() {
           aria-label="Interactive chart, drag left or right to pan history"
         >
           <div className="pointer-events-none absolute left-1/2 top-2 z-20 -translate-x-1/2">
-            <div className="pointer-events-auto flex items-center gap-0.5 rounded-full bg-white/90 px-1 py-1">
+            <div
+              data-timeline-controls="true"
+              className="pointer-events-auto flex items-center gap-0.5 rounded-full bg-white/90 px-1 py-1"
+            >
               <Button
                 type="button"
                 variant="ghost"
