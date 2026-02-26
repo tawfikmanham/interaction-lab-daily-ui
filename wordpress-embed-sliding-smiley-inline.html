@@ -1,0 +1,584 @@
+<!--
+  WORDPRESS-SAFE EMBED — Sliding Smiley Puzzle
+  Paste this entire snippet into a Custom HTML block.
+-->
+
+<div class="sspw-widget" id="sspw-widget">
+  <section class="sspw-card">
+    <div class="sspw-burst-layer" id="sspw-burst-layer" aria-hidden="true"></div>
+    <header>
+      <h2 class="sspw-title">Sliding Smiley Puzzle</h2>
+      <p class="sspw-subtitle">Arrange the smiley by sliding tiles into the empty space.</p>
+    </header>
+
+    <div class="sspw-board-wrap">
+      <div class="sspw-board" id="sspw-board">
+        <div class="sspw-empty-slot" id="sspw-empty-slot" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <div class="sspw-controls">
+      <p class="sspw-moves">Moves <strong id="sspw-moves">0</strong></p>
+      <div class="sspw-actions">
+        <button class="sspw-icon-btn sspw-hidden" id="sspw-reveal-btn" aria-label="Reveal image" title="Reveal image" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
+            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" stroke-linecap="round" stroke-linejoin="round"></path>
+            <circle cx="12" cy="12" r="2.6"></circle>
+          </svg>
+        </button>
+        <button class="sspw-icon-btn" id="sspw-shuffle-btn" aria-label="Shuffle puzzle" title="Shuffle" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
+            <path d="M16 3h5v5" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M4 20l7-7 2-2 8-8" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M21 3h-4" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M16 21h5v-5" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M4 4l7 7" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="sspw-win-row" id="sspw-win-row"></div>
+  </section>
+</div>
+
+<style>
+  .sspw-widget,
+  .sspw-widget * {
+    box-sizing: border-box;
+  }
+
+  .sspw-widget {
+    width: 100%;
+    height: 700px;
+    margin: 0 auto;
+    padding: 14px;
+    border-radius: 16px;
+    background: #ffffff !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+    color: #18181b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sspw-card {
+    width: min(100%, 520px);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #d4d4d8;
+    border-radius: 16px;
+    background: #fff;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 0 auto;
+  }
+
+  .sspw-title {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    margin: 0;
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: #18181b !important;
+  }
+
+  .sspw-subtitle {
+    margin: 6px 0 0 !important;
+    font-size: 13px !important;
+    color: #52525b !important;
+  }
+
+  .sspw-board-wrap {
+    border: 1px solid #d4d4d8;
+    border-radius: 12px;
+    background: #fafafa;
+    padding: 8px;
+  }
+
+  .sspw-board {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    touch-action: none;
+  }
+
+  .sspw-empty-slot {
+    position: absolute;
+    border: 1px dashed #d4d4d8;
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .sspw-tile {
+    position: absolute;
+    left: 0;
+    top: 0;
+    border: 1px solid #a1a1aa;
+    border-radius: 8px;
+    background: #fff;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), width 180ms ease, height 180ms ease;
+    will-change: transform;
+  }
+
+  .sspw-tile:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px #a1a1aa;
+  }
+
+  .sspw-tile-face {
+    width: 100%;
+    height: 100%;
+    border-radius: 6px;
+    background-repeat: no-repeat;
+  }
+
+  .sspw-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .sspw-moves {
+    margin: 0;
+    font-size: 13px;
+    color: #52525b;
+  }
+
+  .sspw-moves strong {
+    margin-left: 4px;
+    color: #18181b;
+  }
+
+  .sspw-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .sspw-icon-btn {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #18181b;
+    cursor: pointer;
+  }
+
+  .sspw-icon-btn:hover {
+    background: #f4f4f5;
+  }
+
+  .sspw-icon-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .sspw-hidden {
+    display: none !important;
+  }
+
+  .sspw-win-row {
+    position: relative;
+    display: none;
+  }
+
+  .sspw-win-row.sspw-visible {
+    display: block;
+    min-height: 20px;
+  }
+
+  .sspw-win-label {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .sspw-confetti {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .sspw-dot {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: #3f3f46;
+    animation: sspw-burst 700ms ease-out forwards;
+  }
+
+  .sspw-burst-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 2;
+  }
+
+  .sspw-burst-piece {
+    position: absolute;
+    left: 50%;
+    top: 52%;
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: #3f3f46;
+    animation: sspw-burst-pop 900ms ease-out forwards;
+  }
+
+  @keyframes sspw-burst-pop {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.4);
+    }
+    15% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translate(var(--tx), var(--ty)) scale(1);
+    }
+  }
+
+  @keyframes sspw-burst {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.7);
+    }
+    20% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -95%) scale(1.25);
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    const GRID_SIZE = 3;
+    const EMPTY_TILE = GRID_SIZE * GRID_SIZE - 1;
+    const SOLVED = Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, i) => i);
+    const SHUFFLE_STEPS = 140;
+    const REVEAL_UNLOCK_MOVES = 5;
+    const GAP = 8;
+
+    const SMILEY_SVG = `
+      <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'>
+        <rect width='300' height='300' fill='white'/>
+        <ellipse cx='105' cy='112' rx='16' ry='42' fill='black'/>
+        <ellipse cx='195' cy='112' rx='16' ry='42' fill='black'/>
+        <path d='M78 178 C105 235 195 235 222 178' fill='none' stroke='black' stroke-width='18' stroke-linecap='round'/>
+      </svg>
+    `.trim();
+    const SMILEY_URL = `url("data:image/svg+xml;utf8,${encodeURIComponent(SMILEY_SVG)}")`;
+
+    const root = document.getElementById("sspw-widget");
+    if (!root) return;
+
+    const boardEl = root.querySelector("#sspw-board");
+    const emptySlotEl = root.querySelector("#sspw-empty-slot");
+    const movesEl = root.querySelector("#sspw-moves");
+    const revealBtn = root.querySelector("#sspw-reveal-btn");
+    const shuffleBtn = root.querySelector("#sspw-shuffle-btn");
+    const winRowEl = root.querySelector("#sspw-win-row");
+    const burstLayerEl = root.querySelector("#sspw-burst-layer");
+
+    let board = createShuffledBoard();
+    let moves = 0;
+    let solved = false;
+    let reveal = false;
+    let boardSize = 0;
+    let dragStart = null;
+    const tileEls = new Map();
+
+    function row(i) {
+      return Math.floor(i / GRID_SIZE);
+    }
+
+    function col(i) {
+      return i % GRID_SIZE;
+    }
+
+    function movableIndexes(emptyIndex) {
+      const r = row(emptyIndex);
+      const c = col(emptyIndex);
+      const indexes = [];
+      if (r > 0) indexes.push(emptyIndex - GRID_SIZE);
+      if (r < GRID_SIZE - 1) indexes.push(emptyIndex + GRID_SIZE);
+      if (c > 0) indexes.push(emptyIndex - 1);
+      if (c < GRID_SIZE - 1) indexes.push(emptyIndex + 1);
+      return indexes;
+    }
+
+    function swapAt(arr, a, b) {
+      const next = arr.slice();
+      const temp = next[a];
+      next[a] = next[b];
+      next[b] = temp;
+      return next;
+    }
+
+    function createShuffledBoard() {
+      let next = SOLVED.slice();
+      let empty = EMPTY_TILE;
+
+      for (let i = 0; i < SHUFFLE_STEPS; i += 1) {
+        const movable = movableIndexes(empty);
+        const pick = movable[Math.floor(Math.random() * movable.length)];
+        next = swapAt(next, empty, pick);
+        empty = pick;
+      }
+
+      if (next.every((tile, idx) => tile === idx)) return createShuffledBoard();
+      return next;
+    }
+
+    function currentCellSize() {
+      return (boardSize - GAP * (GRID_SIZE - 1)) / GRID_SIZE;
+    }
+
+    function updateSize() {
+      boardSize = boardEl.clientWidth;
+      render();
+    }
+
+    function setRevealIcon() {
+      if (reveal) {
+        revealBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"></path>
+            <circle cx="12" cy="12" r="2.6" fill="white"></circle>
+          </svg>
+        `;
+      } else {
+        revealBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
+            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" stroke-linecap="round" stroke-linejoin="round"></path>
+            <circle cx="12" cy="12" r="2.6"></circle>
+          </svg>
+        `;
+      }
+    }
+
+    function renderWin() {
+      winRowEl.innerHTML = "";
+      winRowEl.classList.remove("sspw-visible");
+      if (!solved) return;
+      winRowEl.classList.add("sspw-visible");
+
+      const label = document.createElement("p");
+      label.className = "sspw-win-label";
+      label.textContent = "Puzzle complete.";
+      winRowEl.appendChild(label);
+
+      const confetti = document.createElement("div");
+      confetti.className = "sspw-confetti";
+      for (let i = 0; i < 18; i += 1) {
+        const dot = document.createElement("span");
+        dot.className = "sspw-dot";
+        dot.style.marginLeft = `${((i % 6) - 2.5) * 14}px`;
+        dot.style.marginTop = `${Math.floor(i / 6) * 9}px`;
+        confetti.appendChild(dot);
+      }
+      winRowEl.appendChild(confetti);
+    }
+
+    function ensureTileEl(tile) {
+      if (tileEls.has(tile)) return tileEls.get(tile);
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "sspw-tile";
+      btn.setAttribute("aria-label", `Move tile ${tile + 1}`);
+      btn.addEventListener("click", function () {
+        moveTile(tile);
+      });
+
+      const face = document.createElement("div");
+      face.className = "sspw-tile-face";
+      btn.appendChild(face);
+
+      tileEls.set(tile, btn);
+      boardEl.appendChild(btn);
+      return btn;
+    }
+
+    function render() {
+      const cell = currentCellSize();
+      const emptyIndex = board.indexOf(EMPTY_TILE);
+
+      emptySlotEl.style.width = `${cell}px`;
+      emptySlotEl.style.height = `${cell}px`;
+      emptySlotEl.style.transform = `translate(${col(emptyIndex) * (cell + GAP)}px, ${row(emptyIndex) * (cell + GAP)}px)`;
+
+      movesEl.textContent = String(moves);
+      revealBtn.classList.toggle("sspw-hidden", moves < REVEAL_UNLOCK_MOVES);
+      setRevealIcon();
+      renderWin();
+
+      for (let tile = 0; tile < EMPTY_TILE; tile += 1) {
+        const boardIndex = board.indexOf(tile);
+        const tileEl = ensureTileEl(tile);
+        const faceEl = tileEl.firstElementChild;
+        const sourceIndex = reveal ? boardIndex : tile;
+        const sourceRow = row(sourceIndex);
+        const sourceCol = col(sourceIndex);
+
+        tileEl.style.width = `${cell}px`;
+        tileEl.style.height = `${cell}px`;
+        tileEl.style.transform = `translate(${col(boardIndex) * (cell + GAP)}px, ${row(boardIndex) * (cell + GAP)}px)`;
+
+        faceEl.style.backgroundImage = SMILEY_URL;
+        faceEl.style.backgroundSize = `${GRID_SIZE * 100}% ${GRID_SIZE * 100}%`;
+        faceEl.style.backgroundPosition = `${(sourceCol / (GRID_SIZE - 1)) * 100}% ${(sourceRow / (GRID_SIZE - 1)) * 100}%`;
+        faceEl.style.filter = solved ? "contrast(1.05)" : "";
+      }
+    }
+
+    function triggerConfettiBurst() {
+      burstLayerEl.innerHTML = "";
+      const count = 26;
+
+      for (let i = 0; i < count; i += 1) {
+        const piece = document.createElement("span");
+        piece.className = "sspw-burst-piece";
+        const angle = (Math.PI * 2 * i) / count;
+        const radius = 58 + Math.random() * 78;
+        const tx = Math.cos(angle) * radius;
+        const ty = Math.sin(angle) * radius;
+        piece.style.setProperty("--tx", `calc(-50% + ${tx}px)`);
+        piece.style.setProperty("--ty", `calc(-50% + ${ty}px)`);
+        burstLayerEl.appendChild(piece);
+      }
+    }
+
+    function moveTile(tile) {
+      if (solved) return;
+
+      const emptyIndex = board.indexOf(EMPTY_TILE);
+      const tileIndex = board.indexOf(tile);
+      const tileRow = row(tileIndex);
+      const tileCol = col(tileIndex);
+      const emptyRow = row(emptyIndex);
+      const emptyCol = col(emptyIndex);
+
+      const adjacent = movableIndexes(emptyIndex).includes(tileIndex);
+      const sameRow = tileRow === emptyRow;
+      const sameCol = tileCol === emptyCol;
+      if (!adjacent && !sameRow && !sameCol) return;
+
+      let next = board.slice();
+      let movingEmpty = emptyIndex;
+
+      if (adjacent) {
+        next = swapAt(next, tileIndex, movingEmpty);
+      } else if (sameRow) {
+        const step = tileIndex < movingEmpty ? -1 : 1;
+        while (movingEmpty !== tileIndex) {
+          const nextIndex = movingEmpty + step;
+          next = swapAt(next, movingEmpty, nextIndex);
+          movingEmpty = nextIndex;
+        }
+      } else if (sameCol) {
+        const step = tileIndex < movingEmpty ? -GRID_SIZE : GRID_SIZE;
+        while (movingEmpty !== tileIndex) {
+          const nextIndex = movingEmpty + step;
+          next = swapAt(next, movingEmpty, nextIndex);
+          movingEmpty = nextIndex;
+        }
+      }
+
+      board = next;
+      moves += 1;
+      if (board.every((value, idx) => value === idx)) {
+        solved = true;
+        triggerConfettiBurst();
+      }
+      render();
+    }
+
+    function moveByOffset(offset) {
+      if (solved) return;
+      const emptyIndex = board.indexOf(EMPTY_TILE);
+      const targetIndex = emptyIndex + offset;
+      if (targetIndex < 0 || targetIndex >= GRID_SIZE * GRID_SIZE) return;
+
+      const sameRow = row(targetIndex) === row(emptyIndex);
+      if ((offset === 1 || offset === -1) && !sameRow) return;
+
+      moveTile(board[targetIndex]);
+    }
+
+    function resetPuzzle() {
+      board = createShuffledBoard();
+      moves = 0;
+      solved = false;
+      reveal = false;
+      render();
+    }
+
+    document.addEventListener("keydown", function (event) {
+      if (!root.closest("body")) return;
+      const map = {
+        ArrowUp: GRID_SIZE,
+        ArrowDown: -GRID_SIZE,
+        ArrowLeft: 1,
+        ArrowRight: -1,
+      };
+      const offset = map[event.key];
+      if (offset === undefined) return;
+      event.preventDefault();
+      moveByOffset(offset);
+    });
+
+    boardEl.addEventListener("pointerdown", function (event) {
+      dragStart = { x: event.clientX, y: event.clientY };
+    });
+
+    boardEl.addEventListener("pointerup", function (event) {
+      if (!dragStart) return;
+      const dx = event.clientX - dragStart.x;
+      const dy = event.clientY - dragStart.y;
+      dragStart = null;
+
+      const threshold = 24;
+      if (Math.abs(dx) < threshold && Math.abs(dy) < threshold) return;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        moveByOffset(dx > 0 ? -1 : 1);
+        return;
+      }
+      moveByOffset(dy > 0 ? -GRID_SIZE : GRID_SIZE);
+    });
+
+    revealBtn.addEventListener("click", function () {
+      if (moves < REVEAL_UNLOCK_MOVES) return;
+      reveal = !reveal;
+      render();
+    });
+
+    shuffleBtn.addEventListener("click", resetPuzzle);
+    if (typeof ResizeObserver !== "undefined") {
+      new ResizeObserver(updateSize).observe(boardEl);
+    }
+    updateSize();
+  })();
+</script>

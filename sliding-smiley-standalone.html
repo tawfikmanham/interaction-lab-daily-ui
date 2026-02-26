@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sliding Smiley Puzzle</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px 16px;
+        background: #fff;
+        color: #18181b;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+      }
+
+      .card {
+        width: 100%;
+        max-width: 420px;
+        border: 1px solid #d4d4d8;
+        border-radius: 16px;
+        background: #fff;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .title {
+        margin: 0;
+        font-size: 34px;
+        font-weight: 550;
+        letter-spacing: -0.01em;
+      }
+
+      .subtitle {
+        margin: 6px 0 0;
+        font-size: 13px;
+        color: #52525b;
+      }
+
+      .board-wrap {
+        border: 1px solid #d4d4d8;
+        border-radius: 12px;
+        background: #fafafa;
+        padding: 8px;
+      }
+
+      .board {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+      }
+
+      .empty-slot {
+        position: absolute;
+        border: 1px dashed #d4d4d8;
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .tile {
+        position: absolute;
+        left: 0;
+        top: 0;
+        border: 1px solid #a1a1aa;
+        border-radius: 8px;
+        background: #fff;
+        padding: 0;
+        margin: 0;
+        cursor: pointer;
+        transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), width 180ms ease, height 180ms ease;
+        will-change: transform;
+      }
+
+      .tile:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 2px #a1a1aa;
+      }
+
+      .tile-face {
+        width: 100%;
+        height: 100%;
+        border-radius: 6px;
+        background-repeat: no-repeat;
+      }
+
+      .controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .moves {
+        font-size: 13px;
+        color: #52525b;
+      }
+
+      .moves strong {
+        margin-left: 4px;
+        color: #18181b;
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .icon-btn {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: #18181b;
+        cursor: pointer;
+      }
+
+      .icon-btn:hover {
+        background: #f4f4f5;
+      }
+
+      .icon-btn svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .is-hidden {
+        display: none !important;
+      }
+
+      .win-row {
+        position: relative;
+        min-height: 20px;
+      }
+
+      .win-label {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .confetti {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+
+      .dot {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: #3f3f46;
+        animation: burst 700ms ease-out forwards;
+      }
+
+      @keyframes burst {
+        0% {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(0.7);
+        }
+        20% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          transform: translate(-50%, -95%) scale(1.25);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <section class="card">
+      <header>
+        <h1 class="title">Sliding Smiley Puzzle</h1>
+        <p class="subtitle">Arrange the smiley by sliding tiles into the empty space.</p>
+      </header>
+
+      <div class="board-wrap" id="boardWrap">
+        <div class="board" id="board">
+          <div class="empty-slot" id="emptySlot" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <p class="moves">Moves <strong id="movesValue">0</strong></p>
+        <div class="actions">
+          <button class="icon-btn is-hidden" id="revealBtn" aria-label="Reveal image" title="Reveal image">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
+              <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" stroke-linecap="round" stroke-linejoin="round" />
+              <circle cx="12" cy="12" r="2.6"></circle>
+            </svg>
+          </button>
+          <button class="icon-btn" id="shuffleBtn" aria-label="Shuffle puzzle" title="Shuffle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
+              <path d="M16 3h5v5" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M4 20l7-7 2-2 8-8" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M21 3h-4" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M16 21h5v-5" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M4 4l7 7" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="win-row" id="winRow"></div>
+    </section>
+
+    <script>
+      (() => {
+        const GRID_SIZE = 3;
+        const EMPTY_TILE = GRID_SIZE * GRID_SIZE - 1;
+        const SOLVED = Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, i) => i);
+        const SHUFFLE_STEPS = 140;
+        const REVEAL_UNLOCK_MOVES = 5;
+        const GAP = 8;
+
+        const SMILEY_SVG = `
+          <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'>
+            <rect width='300' height='300' fill='white'/>
+            <ellipse cx='105' cy='112' rx='16' ry='42' fill='black'/>
+            <ellipse cx='195' cy='112' rx='16' ry='42' fill='black'/>
+            <path d='M78 178 C105 235 195 235 222 178' fill='none' stroke='black' stroke-width='18' stroke-linecap='round'/>
+          </svg>
+        `.trim();
+        const SMILEY_URL = `url("data:image/svg+xml;utf8,${encodeURIComponent(SMILEY_SVG)}")`;
+
+        const boardEl = document.getElementById("board");
+        const emptySlotEl = document.getElementById("emptySlot");
+        const movesEl = document.getElementById("movesValue");
+        const revealBtn = document.getElementById("revealBtn");
+        const shuffleBtn = document.getElementById("shuffleBtn");
+        const winRowEl = document.getElementById("winRow");
+
+        let board = createShuffledBoard();
+        let moves = 0;
+        let solved = false;
+        let reveal = false;
+        let boardSize = 0;
+        let dragStart = null;
+        const tileEls = new Map();
+
+        function row(i) {
+          return Math.floor(i / GRID_SIZE);
+        }
+
+        function col(i) {
+          return i % GRID_SIZE;
+        }
+
+        function movableIndexes(emptyIndex) {
+          const r = row(emptyIndex);
+          const c = col(emptyIndex);
+          const indexes = [];
+          if (r > 0) indexes.push(emptyIndex - GRID_SIZE);
+          if (r < GRID_SIZE - 1) indexes.push(emptyIndex + GRID_SIZE);
+          if (c > 0) indexes.push(emptyIndex - 1);
+          if (c < GRID_SIZE - 1) indexes.push(emptyIndex + 1);
+          return indexes;
+        }
+
+        function swapAt(arr, a, b) {
+          const next = arr.slice();
+          const temp = next[a];
+          next[a] = next[b];
+          next[b] = temp;
+          return next;
+        }
+
+        function createShuffledBoard() {
+          let next = SOLVED.slice();
+          let empty = EMPTY_TILE;
+
+          for (let i = 0; i < SHUFFLE_STEPS; i += 1) {
+            const movable = movableIndexes(empty);
+            const pick = movable[Math.floor(Math.random() * movable.length)];
+            next = swapAt(next, empty, pick);
+            empty = pick;
+          }
+
+          if (next.every((tile, idx) => tile === idx)) {
+            return createShuffledBoard();
+          }
+          return next;
+        }
+
+        function currentCellSize() {
+          return (boardSize - GAP * (GRID_SIZE - 1)) / GRID_SIZE;
+        }
+
+        function updateSize() {
+          boardSize = boardEl.clientWidth;
+          render();
+        }
+
+        function setRevealIcon() {
+          if (reveal) {
+            revealBtn.innerHTML = `
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"></path>
+                <circle cx="12" cy="12" r="2.6" fill="white"></circle>
+              </svg>
+            `;
+          } else {
+            revealBtn.innerHTML = `
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
+                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" stroke-linecap="round" stroke-linejoin="round"></path>
+                <circle cx="12" cy="12" r="2.6"></circle>
+              </svg>
+            `;
+          }
+        }
+
+        function renderWin() {
+          winRowEl.innerHTML = "";
+          if (!solved) return;
+
+          const label = document.createElement("p");
+          label.className = "win-label";
+          label.textContent = "Puzzle complete.";
+          winRowEl.appendChild(label);
+
+          const confetti = document.createElement("div");
+          confetti.className = "confetti";
+          for (let i = 0; i < 18; i += 1) {
+            const dot = document.createElement("span");
+            dot.className = "dot";
+            dot.style.marginLeft = `${((i % 6) - 2.5) * 14}px`;
+            dot.style.marginTop = `${Math.floor(i / 6) * 9}px`;
+            confetti.appendChild(dot);
+          }
+          winRowEl.appendChild(confetti);
+        }
+
+        function ensureTileEl(tile) {
+          if (tileEls.has(tile)) return tileEls.get(tile);
+
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "tile";
+          btn.setAttribute("aria-label", `Move tile ${tile + 1}`);
+          btn.addEventListener("click", () => moveTile(tile));
+
+          const face = document.createElement("div");
+          face.className = "tile-face";
+          btn.appendChild(face);
+
+          tileEls.set(tile, btn);
+          boardEl.appendChild(btn);
+          return btn;
+        }
+
+        function render() {
+          const cell = currentCellSize();
+          const emptyIndex = board.indexOf(EMPTY_TILE);
+
+          emptySlotEl.style.width = `${cell}px`;
+          emptySlotEl.style.height = `${cell}px`;
+          emptySlotEl.style.transform = `translate(${col(emptyIndex) * (cell + GAP)}px, ${row(emptyIndex) * (cell + GAP)}px)`;
+
+          movesEl.textContent = String(moves);
+          const revealUnlocked = moves >= REVEAL_UNLOCK_MOVES;
+          revealBtn.classList.toggle("is-hidden", !revealUnlocked);
+          setRevealIcon();
+          renderWin();
+
+          for (let tile = 0; tile < EMPTY_TILE; tile += 1) {
+            const boardIndex = board.indexOf(tile);
+            const tileEl = ensureTileEl(tile);
+            const faceEl = tileEl.firstElementChild;
+            const sourceIndex = reveal ? boardIndex : tile;
+            const sourceRow = row(sourceIndex);
+            const sourceCol = col(sourceIndex);
+
+            tileEl.style.width = `${cell}px`;
+            tileEl.style.height = `${cell}px`;
+            tileEl.style.transform = `translate(${col(boardIndex) * (cell + GAP)}px, ${row(boardIndex) * (cell + GAP)}px)`;
+
+            faceEl.style.backgroundImage = SMILEY_URL;
+            faceEl.style.backgroundSize = `${GRID_SIZE * 100}% ${GRID_SIZE * 100}%`;
+            faceEl.style.backgroundPosition = `${(sourceCol / (GRID_SIZE - 1)) * 100}% ${(sourceRow / (GRID_SIZE - 1)) * 100}%`;
+            faceEl.style.filter = solved ? "contrast(1.05)" : "";
+          }
+        }
+
+        function moveTile(tile) {
+          if (solved) return;
+
+          const emptyIndex = board.indexOf(EMPTY_TILE);
+          const tileIndex = board.indexOf(tile);
+          const tileRow = row(tileIndex);
+          const tileCol = col(tileIndex);
+          const emptyRow = row(emptyIndex);
+          const emptyCol = col(emptyIndex);
+
+          const adjacent = movableIndexes(emptyIndex).includes(tileIndex);
+          const sameRow = tileRow === emptyRow;
+          const sameCol = tileCol === emptyCol;
+          if (!adjacent && !sameRow && !sameCol) return;
+
+          let next = board.slice();
+          let movingEmpty = emptyIndex;
+
+          if (adjacent) {
+            next = swapAt(next, tileIndex, movingEmpty);
+          } else if (sameRow) {
+            const step = tileIndex < movingEmpty ? -1 : 1;
+            while (movingEmpty !== tileIndex) {
+              const nextIndex = movingEmpty + step;
+              next = swapAt(next, movingEmpty, nextIndex);
+              movingEmpty = nextIndex;
+            }
+          } else if (sameCol) {
+            const step = tileIndex < movingEmpty ? -GRID_SIZE : GRID_SIZE;
+            while (movingEmpty !== tileIndex) {
+              const nextIndex = movingEmpty + step;
+              next = swapAt(next, movingEmpty, nextIndex);
+              movingEmpty = nextIndex;
+            }
+          }
+
+          board = next;
+          moves += 1;
+
+          if (board.every((value, idx) => value === idx)) {
+            solved = true;
+          }
+
+          render();
+        }
+
+        function moveByOffset(offset) {
+          if (solved) return;
+          const emptyIndex = board.indexOf(EMPTY_TILE);
+          const targetIndex = emptyIndex + offset;
+          if (targetIndex < 0 || targetIndex >= GRID_SIZE * GRID_SIZE) return;
+
+          const sameRow = row(targetIndex) === row(emptyIndex);
+          if ((offset === 1 || offset === -1) && !sameRow) return;
+
+          moveTile(board[targetIndex]);
+        }
+
+        function resetPuzzle() {
+          board = createShuffledBoard();
+          moves = 0;
+          solved = false;
+          reveal = false;
+          render();
+        }
+
+        document.addEventListener("keydown", (event) => {
+          const map = {
+            ArrowUp: GRID_SIZE,
+            ArrowDown: -GRID_SIZE,
+            ArrowLeft: 1,
+            ArrowRight: -1,
+          };
+          const offset = map[event.key];
+          if (offset === undefined) return;
+          event.preventDefault();
+          moveByOffset(offset);
+        });
+
+        boardEl.addEventListener("pointerdown", (event) => {
+          dragStart = { x: event.clientX, y: event.clientY };
+        });
+
+        boardEl.addEventListener("pointerup", (event) => {
+          if (!dragStart) return;
+          const dx = event.clientX - dragStart.x;
+          const dy = event.clientY - dragStart.y;
+          dragStart = null;
+
+          const threshold = 24;
+          if (Math.abs(dx) < threshold && Math.abs(dy) < threshold) return;
+
+          if (Math.abs(dx) > Math.abs(dy)) {
+            moveByOffset(dx > 0 ? -1 : 1);
+            return;
+          }
+          moveByOffset(dy > 0 ? -GRID_SIZE : GRID_SIZE);
+        });
+
+        revealBtn.addEventListener("click", () => {
+          if (moves < REVEAL_UNLOCK_MOVES) return;
+          reveal = !reveal;
+          render();
+        });
+
+        shuffleBtn.addEventListener("click", resetPuzzle);
+        new ResizeObserver(updateSize).observe(boardEl);
+        updateSize();
+      })();
+    </script>
+  </body>
+</html>
