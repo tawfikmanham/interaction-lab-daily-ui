@@ -1,0 +1,388 @@
+<!--
+  WORDPRESS EMBED — 3D Globe
+
+  HOW TO USE:
+  1) Add a "Custom HTML" block in WordPress
+  2) Paste this entire snippet
+  3) Preview/publish
+-->
+
+<div class="wg-widget" id="wgWidget">
+  <div class="wg-card">
+    <div class="wg-head">
+      <h2 class="wg-title">3D Globe</h2>
+      <p class="wg-subtitle">Drag to rotate and scroll to zoom.</p>
+    </div>
+    <div class="wg-canvas-wrap">
+      <div class="wg-canvas" id="wgCanvas"></div>
+    </div>
+    <p class="wg-error" id="wgError" hidden></p>
+  </div>
+</div>
+
+<style>
+  .wg-widget,
+  .wg-widget * {
+    box-sizing: border-box;
+  }
+
+  .wg-widget {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 0;
+    margin: 0;
+    padding: 28px 0;
+    background: transparent;
+    color: #18181b;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+    display: block;
+  }
+
+  .wg-card {
+    width: min(50vw, 980px) !important;
+    max-width: 100% !important;
+    border: 1px solid rgba(161, 161, 170, 0.5);
+    border-radius: 16px;
+    background: #ffffff;
+    padding: 8px;
+    margin: 0 auto;
+  }
+
+  .wg-head {
+    margin: 8px 8px 12px;
+  }
+
+  .wg-title {
+    margin: 0;
+    font-size: 34px !important;
+    line-height: 1.1 !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.02em;
+    color: #18181b !important;
+  }
+
+  .wg-subtitle {
+    margin: 8px 0 0 !important;
+    font-size: 15px !important;
+    color: #52525b !important;
+  }
+
+  .wg-canvas-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    border: 1px solid rgba(161, 161, 170, 0.5);
+    border-radius: 16px;
+    background: #ffffff;
+    overflow: hidden;
+  }
+
+  .wg-canvas {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: clamp(360px, 56vw, 700px);
+  }
+
+  .wg-canvas canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .wg-error {
+    margin: 12px 0 0;
+    padding: 10px 12px;
+    border: 1px solid #fcd34d;
+    border-radius: 10px;
+    background: #fffbeb;
+    color: #92400e;
+    font-size: 13px;
+  }
+
+  @media (max-width: 640px) {
+    .wg-widget {
+      padding: 0;
+      min-height: 0;
+    }
+
+    .wg-card {
+      width: 100% !important;
+      padding: 7px;
+      border-radius: 16px;
+    }
+
+    .wg-title {
+      font-size: 28px !important;
+    }
+
+    .wg-subtitle {
+      font-size: 14px !important;
+    }
+
+    .wg-canvas {
+      height: clamp(320px, 75vw, 700px);
+    }
+
+    .wg-canvas-wrap {
+      border-radius: 16px;
+    }
+  }
+
+  @media (max-width: 1200px) and (min-width: 641px) {
+    .wg-card {
+      width: min(72vw, 980px) !important;
+    }
+  }
+</style>
+
+<script>
+(function () {
+  var root = document.getElementById("wgWidget");
+  var mount = document.getElementById("wgCanvas");
+  var errorNode = document.getElementById("wgError");
+  if (!root || !mount) return;
+
+  var THREE_URL = "https://unpkg.com/three@0.160.0/build/three.min.js";
+  var GEOJSON_URL = "https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json";
+
+  function showError(message) {
+    if (!errorNode) return;
+    errorNode.hidden = false;
+    errorNode.textContent = message;
+  }
+
+  function loadThree() {
+    return new Promise(function (resolve, reject) {
+      if (window.THREE) {
+        resolve();
+        return;
+      }
+
+      var existing = document.querySelector('script[data-wg-three="1"]');
+      if (existing) {
+        existing.addEventListener("load", function () { resolve(); }, { once: true });
+        existing.addEventListener("error", function () { reject(new Error("Failed to load Three.js")); }, { once: true });
+        return;
+      }
+
+      var script = document.createElement("script");
+      script.src = THREE_URL;
+      script.async = true;
+      script.dataset.wgThree = "1";
+      script.onload = function () { resolve(); };
+      script.onerror = function () { reject(new Error("Failed to load Three.js")); };
+      document.head.appendChild(script);
+    });
+  }
+
+  function latLonToVec3(lat, lon, radius, THREE) {
+    var phi = (90 - lat) * Math.PI / 180;
+    var theta = (lon + 180) * Math.PI / 180;
+    var x = -radius * Math.sin(phi) * Math.cos(theta);
+    var y = radius * Math.cos(phi);
+    var z = radius * Math.sin(phi) * Math.sin(theta);
+    return new THREE.Vector3(x, y, z);
+  }
+
+  var mounted = true;
+  var raf = 0;
+  var renderer = null;
+  var removeListeners = function () {};
+
+  function cleanup() {
+    mounted = false;
+    if (raf) cancelAnimationFrame(raf);
+    removeListeners();
+    if (renderer) {
+      renderer.dispose();
+      if (renderer.domElement && renderer.domElement.parentNode) {
+        renderer.domElement.parentNode.removeChild(renderer.domElement);
+      }
+    }
+  }
+
+  window.addEventListener("beforeunload", cleanup, { once: true });
+
+  loadThree().then(function () {
+    if (!mounted || !window.THREE) return;
+
+    var THREE = window.THREE;
+    var scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xffffff);
+
+    var camera = new THREE.PerspectiveCamera(45, mount.clientWidth / mount.clientHeight, 0.1, 100);
+    camera.position.set(0, 0, 6);
+
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setClearColor(0xffffff, 1);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(mount.clientWidth, mount.clientHeight);
+    mount.appendChild(renderer.domElement);
+
+    var globeGroup = new THREE.Group();
+    scene.add(globeGroup);
+
+    var baseRadius = 1.9;
+
+    var gridGroup = new THREE.Group();
+    globeGroup.add(gridGroup);
+
+    var gridMaterial = new THREE.LineBasicMaterial({
+      color: 0xbdbdbd,
+      transparent: true,
+      opacity: 0.8
+    });
+
+    for (var lat = -75; lat <= 75; lat += 15) {
+      var latPoints = [];
+      for (var lon = -180; lon < 180; lon += 3) {
+        latPoints.push(latLonToVec3(lat, lon, baseRadius, THREE));
+      }
+      var latGeo = new THREE.BufferGeometry().setFromPoints(latPoints);
+      var latLine = new THREE.LineLoop(latGeo, gridMaterial);
+      gridGroup.add(latLine);
+    }
+
+    for (var lon2 = -180; lon2 < 180; lon2 += 15) {
+      var lonPoints = [];
+      for (var lat2 = -90; lat2 <= 90; lat2 += 3) {
+        lonPoints.push(latLonToVec3(lat2, lon2, baseRadius, THREE));
+      }
+      var lonGeo = new THREE.BufferGeometry().setFromPoints(lonPoints);
+      var lonLine = new THREE.Line(lonGeo, gridMaterial);
+      gridGroup.add(lonLine);
+    }
+
+    var countryGroup = new THREE.Group();
+    globeGroup.add(countryGroup);
+
+    var countryLineMaterial = new THREE.LineBasicMaterial({
+      color: 0x3f3f3f,
+      transparent: true,
+      opacity: 0.95
+    });
+
+    fetch(GEOJSON_URL, { cache: "force-cache" })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (!mounted) return;
+        var features = data && data.features ? data.features : [];
+
+        for (var i = 0; i < features.length; i += 1) {
+          var geometry = features[i] && features[i].geometry;
+          if (!geometry) continue;
+
+          var polygons = [];
+          if (geometry.type === "Polygon") polygons = [geometry.coordinates];
+          if (geometry.type === "MultiPolygon") polygons = geometry.coordinates || [];
+
+          for (var p = 0; p < polygons.length; p += 1) {
+            var polygon = polygons[p] || [];
+            for (var r = 0; r < polygon.length; r += 1) {
+              var ring = polygon[r];
+              if (!Array.isArray(ring) || ring.length < 2) continue;
+
+              var points = [];
+              for (var k = 0; k < ring.length; k += 1) {
+                var pair = ring[k];
+                if (!pair || pair.length < 2) continue;
+                points.push(latLonToVec3(pair[1], pair[0], baseRadius + 0.01, THREE));
+              }
+
+              if (points.length < 2) continue;
+              var ringGeo = new THREE.BufferGeometry().setFromPoints(points);
+              var line = new THREE.Line(ringGeo, countryLineMaterial);
+              countryGroup.add(line);
+            }
+          }
+        }
+      })
+      .catch(function () {
+        showError("Could not load country outlines from the GeoJSON source.");
+      });
+
+    var isPointerDown = false;
+    var lastX = 0;
+    var lastY = 0;
+    var velX = 0;
+    var velY = 0;
+
+    var minZoom = 3.2;
+    var maxZoom = 10;
+
+    function onPointerDown(event) {
+      isPointerDown = true;
+      lastX = event.clientX;
+      lastY = event.clientY;
+    }
+
+    function onPointerMove(event) {
+      if (!isPointerDown) return;
+      var dx = event.clientX - lastX;
+      var dy = event.clientY - lastY;
+      lastX = event.clientX;
+      lastY = event.clientY;
+
+      var speed = 0.005;
+      globeGroup.rotation.y += dx * speed;
+      globeGroup.rotation.x += dy * speed;
+      globeGroup.rotation.x = Math.max(-1.25, Math.min(1.25, globeGroup.rotation.x));
+
+      velX = dx * 0.0009;
+      velY = dy * 0.0009;
+    }
+
+    function onPointerUp() {
+      isPointerDown = false;
+    }
+
+    function onWheel(event) {
+      event.preventDefault();
+      var nextZ = camera.position.z + event.deltaY * 0.004;
+      camera.position.z = Math.max(minZoom, Math.min(maxZoom, nextZ));
+    }
+
+    function onResize() {
+      if (!mounted || !renderer) return;
+      camera.aspect = mount.clientWidth / mount.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(mount.clientWidth, mount.clientHeight);
+    }
+
+    renderer.domElement.addEventListener("pointerdown", onPointerDown);
+    renderer.domElement.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("resize", onResize);
+
+    removeListeners = function () {
+      if (renderer && renderer.domElement) {
+        renderer.domElement.removeEventListener("pointerdown", onPointerDown);
+        renderer.domElement.removeEventListener("wheel", onWheel);
+      }
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("resize", onResize);
+    };
+
+    function animate() {
+      if (!mounted) return;
+      raf = requestAnimationFrame(animate);
+
+      if (!isPointerDown) {
+        globeGroup.rotation.y += 0.0015 + velX;
+        globeGroup.rotation.x += velY;
+        globeGroup.rotation.x = Math.max(-1.25, Math.min(1.25, globeGroup.rotation.x));
+        velX *= 0.94;
+        velY *= 0.9;
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  }).catch(function () {
+    showError("Three.js failed to load. Check internet access and try again.");
+  });
+})();
+</script>
