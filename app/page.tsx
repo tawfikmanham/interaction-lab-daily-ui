@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type PianoKey = {
@@ -172,6 +173,12 @@ export default function Home() {
             Your idea works perfectly. Tap white and black keys, or type on your keyboard.
             Quick mapping: {KEYBOARD_HINT}
           </p>
+          <Link
+            href="/daily-ui/globe-wireframe"
+            className="inline-block rounded-full border border-zinc-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-700 transition hover:bg-zinc-100"
+          >
+            Open 3D Globe Experiment
+          </Link>
         </header>
 
         <section className="space-y-3">
