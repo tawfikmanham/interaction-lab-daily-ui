@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weather Widget</title>
+  <style>
+    :root {
+      --card-bg: #ffffff;
+      --card-border: #e6e6e6;
+      --text: #121212;
+      --muted: #6c6c72;
+      --radius: 20px;
+      --shadow: 0 10px 28px rgba(17, 17, 17, 0.06), 0 2px 5px rgba(17, 17, 17, 0.05);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      padding: 16px;
+    }
+
+    .weather-widget {
+      width: min(100%, 336px);
+      position: relative;
+      isolation: isolate;
+      background: transparent;
+    }
+
+    .card {
+      position: relative;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      overflow: visible;
+      transition: transform 230ms ease, box-shadow 230ms ease;
+      will-change: transform;
+    }
+
+    .weather-widget:hover .card {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 30px rgba(17, 17, 17, 0.07), 0 3px 8px rgba(17, 17, 17, 0.05);
+    }
+
+    .fx {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      border-radius: inherit;
+      overflow: hidden;
+    }
+
+    .glare {
+      opacity: 0;
+      background:
+        radial-gradient(170px 130px at 88% 4%, rgba(255, 255, 255, 0.85), rgba(255,255,255,0) 60%),
+        radial-gradient(190px 120px at 14% 2%, rgba(120, 120, 120, 0.18), rgba(255,255,255,0) 68%);
+      animation: glareDrift 5.8s ease-in-out infinite alternate;
+      transition: opacity 260ms ease;
+    }
+
+    .cloud-haze {
+      opacity: 0;
+      background: linear-gradient(115deg, rgba(245,245,245,0.58), rgba(242,242,242,0.12), rgba(249,249,249,0.52));
+      background-size: 200% 100%;
+      animation: hazeSlide 8s linear infinite;
+      transition: opacity 260ms ease;
+    }
+
+    .rain-overlay,
+    .snow-layer,
+    .storm-flash {
+      opacity: 0;
+      transition: opacity 220ms ease;
+      overflow: hidden;
+    }
+
+    .rain-drop {
+      position: absolute;
+      top: -22px;
+      width: 1.8px;
+      height: 14px;
+      border-radius: 2px;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.72));
+      animation: rainFall linear infinite;
+    }
+
+    .flake {
+      position: absolute;
+      top: -14px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.35);
+      box-shadow: none;
+      animation: snowFall linear infinite;
+    }
+
+    .storm-flash {
+      background: radial-gradient(140px 80px at 75% 15%, rgba(255,255,255,0.78), rgba(255,255,255,0));
+    }
+
+    @keyframes glareDrift {
+      from { background-position: 0% 0%, 0% 0%; }
+      to { background-position: 6% 4%, -5% -3%; }
+    }
+
+    @keyframes hazeSlide {
+      from { background-position: 0% 0%; }
+      to { background-position: 100% 0%; }
+    }
+
+    @keyframes rainFall {
+      to { transform: translateY(138px); opacity: 0.1; }
+    }
+
+    @keyframes snowFall {
+      to { transform: translateY(160px) translateX(10px); opacity: 0.35; }
+    }
+
+    @keyframes stormFlash {
+      0%, 80%, 100% { opacity: 0; }
+      84% { opacity: 0.55; }
+      86% { opacity: 0.18; }
+      88% { opacity: 0.62; }
+      91% { opacity: 0; }
+    }
+
+    .content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .title {
+      font-size: 15px;
+      font-weight: 640;
+      letter-spacing: 0.01em;
+    }
+
+    .top-updated {
+      font-size: 12px;
+      color: #7a7a7f;
+      white-space: nowrap;
+    }
+
+    .meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+      gap: 8px;
+    }
+
+    .location {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 72%;
+    }
+
+    .updated {
+      color: #7a7a7f;
+    }
+
+    .hero {
+      position: absolute;
+      right: -26px;
+      top: 52px;
+      width: 120px;
+      height: 120px;
+      display: grid;
+      place-items: center;
+      transform: rotate(-4deg);
+      transition: transform 260ms ease, filter 260ms ease;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .hero svg {
+      width: 114px;
+      height: 114px;
+      stroke: #101010;
+      stroke-width: 7.1;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      filter: drop-shadow(0 6px 12px rgba(0,0,0,0.08));
+    }
+
+    .mode-icon svg {
+      width: 15px;
+      height: 15px;
+      stroke: #161616;
+      stroke-width: 1.9;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .temp {
+      font-size: clamp(54px, 11vw, 66px);
+      line-height: 0.9;
+      font-weight: 670;
+      letter-spacing: -0.03em;
+      margin-top: 6px;
+      padding-right: 96px;
+    }
+
+    .condition {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: #2a2a31;
+      padding-right: 98px;
+      min-height: 22px;
+    }
+
+    .widget-controls {
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+
+    .mode-pill {
+      height: 32px;
+      border: 1px solid #ebebeb;
+      border-radius: 999px;
+      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff;
+      color: #313136;
+      font-size: 12px;
+      font-weight: 600;
+      min-width: 116px;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(17, 17, 17, 0.04);
+    }
+
+    .mode-icon {
+      width: 14px;
+      height: 14px;
+      display: inline-grid;
+      place-items: center;
+    }
+
+    .nav-btn {
+      border: 1px solid #e8e8e8;
+      background: #fff;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      color: #55555b;
+      cursor: pointer;
+      transition: background 170ms ease, border-color 170ms ease, transform 170ms ease;
+      box-shadow: 0 2px 8px rgba(17, 17, 17, 0.04);
+    }
+
+    .nav-btn:hover { background: #fafafa; border-color: #dcdcdc; }
+    .nav-btn:active { transform: scale(0.96); }
+
+    .mode-sunny .glare { opacity: 1; }
+
+    .mode-cloudy .cloud-haze { opacity: 0.82; }
+    .mode-rain .rain-overlay { opacity: 1; }
+
+    .mode-snow .snow-layer { opacity: 1; }
+    .mode-snow .hero { transform: rotate(0deg); }
+
+    .mode-wind .card {
+      animation: windPush 1.8s ease-in-out infinite;
+      transform-origin: center;
+    }
+
+    .mode-storm .rain-overlay,
+    .mode-storm .storm-flash {
+      opacity: 1;
+    }
+
+    .mode-storm .storm-flash {
+      animation: stormFlash 2.8s linear infinite;
+    }
+    .mode-storm .card {
+      animation: stormInvert 6.8s linear infinite;
+    }
+
+    @keyframes windPush {
+      0%, 100% { transform: translateX(0) rotate(0deg) skewX(0deg); }
+      25% { transform: translateX(-1.5px) rotate(-0.42deg) skewX(-0.35deg); }
+      75% { transform: translateX(1.8px) rotate(0.35deg) skewX(0.26deg); }
+    }
+
+    @keyframes stormInvert {
+      0%, 86%, 100% { filter: invert(0) contrast(1) brightness(1); }
+      88% { filter: invert(1) contrast(1.18) brightness(1.05); }
+      89.2% { filter: invert(0) contrast(1.05) brightness(1); }
+      90.1% { filter: invert(1) contrast(1.25) brightness(1.08); }
+      91.5% { filter: invert(0) contrast(1) brightness(1); }
+    }
+
+    @keyframes coldWiggle {
+      0%, 100% { transform: translateX(0) rotate(0deg); }
+      20% { transform: translateX(-2px) rotate(-1.2deg); }
+      40% { transform: translateX(2px) rotate(1deg); }
+      60% { transform: translateX(-1.4px) rotate(-0.8deg); }
+      80% { transform: translateX(1.6px) rotate(0.6deg); }
+    }
+
+    .cold-wiggle { animation: coldWiggle 620ms cubic-bezier(0.42, 0, 0.58, 1); }
+
+    @media (max-width: 420px) {
+      .weather-widget { width: min(100%, 316px); }
+      .card { padding: 16px; }
+      .mode-pill { min-width: 100px; }
+      .hero {
+        width: 108px;
+        height: 108px;
+        right: -22px;
+        top: 50px;
+      }
+      .hero svg {
+        width: 102px;
+        height: 102px;
+      }
+      .temp { padding-right: 82px; }
+      .condition { padding-right: 84px; font-size: 17px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="weather-widget mode-sunny" id="weatherWidget">
+    <div class="card" id="weatherCard">
+      <div class="fx glare" aria-hidden="true"></div>
+      <div class="fx cloud-haze" aria-hidden="true"></div>
+      <div class="fx rain-overlay" id="rainOverlay" aria-hidden="true"></div>
+      <div class="fx snow-layer" id="snowLayer" aria-hidden="true"></div>
+      <div class="fx storm-flash" id="stormFlash" aria-hidden="true"></div>
+
+      <div class="hero" id="heroIcon" aria-hidden="true"></div>
+
+      <div class="content">
+        <div class="top">
+          <div class="title">Weather</div>
+          <div class="top-updated" id="updatedText">Updated 2:04 PM</div>
+        </div>
+
+        <div class="meta">
+          <div class="location" id="locationText">Lisbon</div>
+        </div>
+
+        <div class="temp" id="tempText">30°</div>
+        <div class="condition" id="conditionText">Clear sky</div>
+
+      </div>
+    </div>
+
+    <div class="widget-controls" aria-label="Weather style controls">
+      <button class="nav-btn" id="prevModeBtn" aria-label="Previous weather mode" title="Previous">&#x2039;</button>
+      <div class="mode-pill"><span class="mode-icon" id="modeIcon"></span><span id="modeLabel">Sunny</span></div>
+      <button class="nav-btn" id="nextModeBtn" aria-label="Next weather mode" title="Next">&#x203A;</button>
+    </div>
+  </div>
+
+  <script>
+    const PREVIEW_DATA = {
+      sunny: { icon: "sunny", label: "Sunny", condition: "Clear sky", location: "Lisbon", temp: 30, updated: "2:04 PM", mode: "sunny" },
+      cloudy: { icon: "cloudy", label: "Cloudy", condition: "Overcast", location: "Berlin", temp: 21, updated: "2:05 PM", mode: "cloudy" },
+      rain: { icon: "rain", label: "Rain", condition: "Light rain", location: "Seattle", temp: 16, updated: "2:05 PM", mode: "rain" },
+      snow: { icon: "snow", label: "Snow", condition: "Snow showers", location: "Oslo", temp: -1, updated: "2:06 PM", mode: "snow" },
+      wind: { icon: "wind", label: "Wind", condition: "Windy", location: "Chicago", temp: 19, updated: "2:06 PM", mode: "wind" },
+      storm: { icon: "storm", label: "Storm", condition: "Thunderstorm", location: "Miami", temp: 24, updated: "2:07 PM", mode: "storm" }
+    };
+
+    const MODE_ORDER = ["sunny", "cloudy", "rain", "snow", "wind", "storm"];
+
+    const el = {
+      widget: document.getElementById("weatherWidget"),
+      heroIcon: document.getElementById("heroIcon"),
+      location: document.getElementById("locationText"),
+      updated: document.getElementById("updatedText"),
+      temp: document.getElementById("tempText"),
+      condition: document.getElementById("conditionText"),
+      prevModeBtn: document.getElementById("prevModeBtn"),
+      nextModeBtn: document.getElementById("nextModeBtn"),
+      modeLabel: document.getElementById("modeLabel"),
+      modeIcon: document.getElementById("modeIcon"),
+      rainOverlay: document.getElementById("rainOverlay"),
+      snowLayer: document.getElementById("snowLayer")
+    };
+
+    let currentModeIndex = 0;
+    let snowWiggleTimer = null;
+    function iconSvg(name) {
+      switch (name) {
+        case "sunny":
+          return '<svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="10"></circle><path d="M40 8v9M40 63v9M8 40h9M63 40h9M17.4 17.4l6.4 6.4M56.2 56.2l6.4 6.4M17.4 62.6l6.4-6.4M56.2 23.8l6.4-6.4"></path></svg>';
+        case "cloudy":
+          return '<svg viewBox="0 0 80 80" aria-hidden="true"><path d="M22 54h34a11 11 0 0 0 0-22 16 16 0 0 0-30-4.6A11 11 0 0 0 22 54z"></path></svg>';
+        case "rain":
+          return '<svg viewBox="0 0 80 80" aria-hidden="true"><path d="M20 47h36a10 10 0 0 0 0-20 15 15 0 0 0-28.8-3.8A10 10 0 0 0 20 47z"></path><path d="M26 56l-3 10M40 56l-3 10M54 56l-3 10"></path></svg>';
+        case "snow":
+          return '<svg viewBox="0 0 80 80" aria-hidden="true"><path d="M40 10v60M14 25l52 30M14 55l52-30M40 18l-5 5M40 18l5 5M40 62l-5-5M40 62l5-5M22 30l7 1M22 30l2 6M58 50l-7-1M58 50l-2-6M22 50l7-1M22 50l2-6M58 30l-7 1M58 30l-2 6"></path><path d="M40 34l3 6-3 6-3-6z"></path></svg>';
+        case "wind":
+          return '<svg viewBox="0 0 80 80" aria-hidden="true"><path d="M12 30h36c6 0 10-4 10-9s-4-9-10-9M12 42h48c6 0 10 4 10 9s-4 9-10 9M12 54h30"></path></svg>';
+        case "storm":
+          return '<svg viewBox="0 0 80 80" aria-hidden="true"><path d="M20 41h36a10 10 0 0 0 0-20 15 15 0 0 0-28.8-3.8A10 10 0 0 0 20 41z"></path><path d="M42 42l-8 14h8l-4 12 14-18h-8l5-8"></path></svg>';
+        default:
+          return "";
+      }
+    }
+
+    function clearWiggleTimer() {
+      if (snowWiggleTimer) {
+        clearTimeout(snowWiggleTimer);
+        snowWiggleTimer = null;
+      }
+    }
+
+    function scheduleSnowWiggle() {
+      clearWiggleTimer();
+      const loop = () => {
+        const delay = 3200 + Math.random() * 3000;
+        snowWiggleTimer = setTimeout(() => {
+          el.heroIcon.classList.add("cold-wiggle");
+          setTimeout(() => el.heroIcon.classList.remove("cold-wiggle"), 560);
+          loop();
+        }, delay);
+      };
+      loop();
+    }
+
+    function setMode(mode) {
+      el.widget.classList.remove("mode-sunny", "mode-cloudy", "mode-rain", "mode-snow", "mode-wind", "mode-storm");
+      el.widget.classList.add("mode-" + mode);
+
+      if (mode === "snow") scheduleSnowWiggle();
+      else {
+        clearWiggleTimer();
+        el.heroIcon.classList.remove("cold-wiggle");
+      }
+    }
+
+    function renderPreview(modeKey) {
+      const item = PREVIEW_DATA[modeKey];
+      if (!item) return;
+
+      setMode(item.mode);
+      el.modeLabel.textContent = item.label;
+      const svg = iconSvg(item.icon);
+      el.modeIcon.innerHTML = svg;
+      el.heroIcon.innerHTML = svg;
+      el.location.textContent = item.location;
+      el.updated.textContent = "Updated " + item.updated;
+      el.temp.textContent = `${item.temp}°`;
+      el.condition.textContent = item.condition;
+    }
+
+    function buildRainDrops(count) {
+      const frag = document.createDocumentFragment();
+      for (let i = 0; i < count; i++) {
+        const d = document.createElement("span");
+        d.className = "rain-drop";
+        d.style.left = (Math.random() * 100).toFixed(2) + "%";
+        d.style.animationDuration = (0.64 + Math.random() * 0.8).toFixed(2) + "s";
+        d.style.animationDelay = (-Math.random() * 1.3).toFixed(2) + "s";
+        d.style.opacity = (0.35 + Math.random() * 0.55).toFixed(2);
+        frag.appendChild(d);
+      }
+      el.rainOverlay.innerHTML = "";
+      el.rainOverlay.appendChild(frag);
+    }
+
+    function buildSnowflakes(count) {
+      const frag = document.createDocumentFragment();
+      for (let i = 0; i < count; i++) {
+        const f = document.createElement("span");
+        f.className = "flake";
+        const size = 2.2 + Math.random() * 4.2;
+        f.style.width = size.toFixed(2) + "px";
+        f.style.height = size.toFixed(2) + "px";
+        f.style.left = (Math.random() * 100).toFixed(2) + "%";
+        f.style.animationDuration = (2.6 + Math.random() * 3.3).toFixed(2) + "s";
+        f.style.animationDelay = (-Math.random() * 5.2).toFixed(2) + "s";
+        f.style.opacity = (0.16 + Math.random() * 0.34).toFixed(2);
+        frag.appendChild(f);
+      }
+      el.snowLayer.innerHTML = "";
+      el.snowLayer.appendChild(frag);
+    }
+
+    function cycleMode(delta) {
+      currentModeIndex = (currentModeIndex + delta + MODE_ORDER.length) % MODE_ORDER.length;
+      renderPreview(MODE_ORDER[currentModeIndex]);
+    }
+
+    el.prevModeBtn.addEventListener("click", () => cycleMode(-1));
+    el.nextModeBtn.addEventListener("click", () => cycleMode(1));
+    buildRainDrops(18);
+    buildSnowflakes(30);
+    renderPreview(MODE_ORDER[currentModeIndex]);
+  </script>
+</body>
+</html>
