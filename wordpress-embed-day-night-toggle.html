@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Day Night Toggle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,1,0" rel="stylesheet" />
+  <style>
+    :root {
+      --ease-snap: cubic-bezier(0.2, 0.9, 0.32, 1);
+      --ease-spring: cubic-bezier(0.28, 1.3, 0.52, 1);
+      --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+      --stage-radius: 24px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0f1014;
+      font-family: "SF Pro Text", "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+
+    .day-night-root {
+      width: 100% !important;
+      max-width: none !important;
+      min-width: 0;
+      min-height: 100vh;
+      padding: 0;
+      display: grid;
+      place-items: center;
+    }
+
+    .stage {
+      position: relative;
+      width: 100% !important;
+      min-width: 100%;
+      max-width: none;
+      margin-inline: auto;
+      height: 700px;
+      min-height: 700px;
+      max-height: 700px;
+      border-radius: var(--stage-radius);
+      overflow: hidden;
+      background: #17181f;
+      box-shadow:
+        0 24px 64px rgba(9, 10, 14, 0.35),
+        0 1px 0 rgba(255, 255, 255, 0.05) inset;
+      transition: background 320ms var(--ease-snap);
+    }
+
+    .radial-ellipse {
+      position: absolute;
+      width: 1540px;
+      height: 1540px;
+      top: -290px;
+      left: -320px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.92;
+      transform: translateX(56px);
+      background: radial-gradient(
+        closest-side,
+        rgba(255, 255, 255, 0.58) 0%,
+        rgba(235, 238, 246, 0.36) 42%,
+        rgba(231, 231, 234, 0) 72%
+      );
+      transition:
+        transform 360ms var(--ease-snap),
+        opacity 320ms var(--ease-soft),
+        background 320ms var(--ease-soft);
+    }
+
+    .stage::before {
+      content: "";
+      position: absolute;
+      inset: -15vmax;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(44vmax 34vmax at 15% 18%, rgba(47, 51, 75, 0.52), rgba(47, 51, 75, 0) 75%),
+        radial-gradient(30vmax 26vmax at 80% 84%, rgba(23, 25, 38, 0.62), rgba(23, 25, 38, 0) 78%);
+      transition: opacity 320ms var(--ease-soft);
+      opacity: 1;
+    }
+
+    .stage::after {
+      content: "";
+      position: absolute;
+      inset: -15vmax;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(42vmax 34vmax at 15% 14%, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0) 75%),
+        radial-gradient(34vmax 28vmax at 86% 84%, rgba(208, 214, 230, 0.52), rgba(208, 214, 230, 0) 80%);
+      transition: opacity 320ms var(--ease-soft);
+      opacity: 0;
+    }
+
+    body[data-theme="day"] .stage {
+      background: #ffffff;
+    }
+
+    body[data-theme="night"] .radial-ellipse {
+      transform: translateX(0);
+      opacity: 0.8;
+      background: radial-gradient(
+        closest-side,
+        rgba(54, 60, 98, 0.42) 0%,
+        rgba(34, 38, 60, 0.24) 44%,
+        rgba(23, 25, 38, 0) 74%
+      );
+    }
+
+    body[data-theme="day"] .radial-ellipse {
+      transform: translateX(56px);
+      opacity: 0;
+      background: radial-gradient(
+        closest-side,
+        rgba(255, 255, 255, 0.58) 0%,
+        rgba(235, 238, 246, 0.36) 42%,
+        rgba(231, 231, 234, 0) 72%
+      );
+    }
+
+    body[data-theme="day"] .stage::before { opacity: 0; }
+    body[data-theme="day"] .stage::after { opacity: 0; }
+
+    .toggle-wrap {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 108px;
+      height: 56px;
+      z-index: 3;
+    }
+
+    .toggle {
+      position: relative;
+      width: 108px;
+      height: 56px;
+      border: 0;
+      border-radius: 999px;
+      background: #1d1e25;
+      padding: 0;
+      cursor: pointer;
+      isolation: isolate;
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.035),
+        0 8px 20px rgba(8, 8, 13, 0.2);
+      transition: background 280ms var(--ease-snap), box-shadow 280ms var(--ease-snap), transform 180ms var(--ease-soft);
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .toggle:hover {
+      transform: translateY(-1px);
+    }
+
+    .toggle:active {
+      transform: translateY(0) scale(0.97);
+    }
+
+    .toggle:focus-visible {
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+        0 0 0 3px rgba(44, 134, 255, 0.34),
+        0 8px 20px rgba(8, 8, 13, 0.24);
+    }
+
+    .icon-slot,
+    .thumb {
+      position: absolute;
+      top: 4px;
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+    }
+
+    .icon-slot {
+      border-radius: 999px;
+      transition: opacity 260ms var(--ease-soft), transform 300ms var(--ease-snap), filter 300ms var(--ease-soft), color 280ms var(--ease-soft);
+      will-change: transform, filter, opacity;
+    }
+
+    .toggle[data-direction="to-day"] .icon-moon {
+      transition-delay: 0ms, 0ms, 0ms, 0ms;
+    }
+
+    .toggle[data-direction="to-day"] .icon-sun {
+      transition-delay: 55ms, 55ms, 55ms, 0ms;
+    }
+
+    .toggle[data-direction="to-night"] .icon-sun {
+      transition-delay: 0ms, 0ms, 0ms, 0ms;
+    }
+
+    .toggle[data-direction="to-night"] .icon-moon {
+      transition-delay: 55ms, 55ms, 55ms, 0ms;
+    }
+
+    .icon-slot .material-symbols-rounded {
+      font-size: 31px;
+      line-height: 1;
+      font-variation-settings: "FILL" 1, "wght" 500, "GRAD" 0, "opsz" 24;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .icon-moon {
+      left: 4px;
+      color: #f3f4f7;
+      opacity: 1;
+      transform: scale(1);
+      filter: blur(0);
+    }
+
+    .icon-sun {
+      right: 4px;
+      color: #f4f4f7;
+      opacity: 0.2;
+      transform: scale(0.72);
+      filter: blur(1.8px);
+    }
+
+    .thumb {
+      left: 8px;
+      width: 40px;
+      height: 40px;
+      top: 8px;
+      border-radius: 999px;
+      background: #f3f4f7;
+      box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.28),
+        0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+      transform: translateX(52px);
+      transition: transform 340ms var(--ease-spring), background 280ms var(--ease-soft), box-shadow 280ms var(--ease-soft), filter 240ms var(--ease-soft);
+      will-change: transform;
+      z-index: 2;
+    }
+
+    .toggle::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background: linear-gradient(108deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.01) 52%, rgba(255, 255, 255, 0.08));
+      opacity: 0.8;
+      transition: opacity 240ms var(--ease-soft);
+      z-index: 0;
+    }
+
+    .toggle.is-transitioning::after {
+      content: "";
+      position: absolute;
+      inset: 6px;
+      border-radius: 999px;
+      pointer-events: none;
+      background: radial-gradient(closest-side, rgba(244, 245, 248, 0.52), rgba(244, 245, 248, 0));
+      filter: blur(8px);
+      animation: bloom 280ms var(--ease-snap);
+      z-index: 1;
+    }
+
+    .toggle.is-transitioning .icon-slot {
+      animation: iconBlend 280ms var(--ease-snap);
+    }
+
+    .toggle[data-ui-theme="day"] {
+      background: #1b1c22;
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+        0 8px 20px rgba(21, 22, 28, 0.22);
+    }
+
+    .toggle[data-ui-theme="day"] .thumb {
+      transform: translateX(0);
+      background: #fefeff;
+      box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.2),
+        0 0 0 1px rgba(255, 255, 255, 0.24) inset;
+      filter: brightness(1.02);
+    }
+
+    .toggle[data-ui-theme="day"] .icon-moon {
+      color: #1d1e25;
+      opacity: 0.18;
+      transform: scale(0.72);
+      filter: blur(1.8px);
+    }
+
+    .toggle[data-ui-theme="day"] .icon-sun {
+      color: #f4f4f7;
+      opacity: 1;
+      transform: scale(1);
+      filter: blur(0);
+    }
+
+    @keyframes bloom {
+      0% {
+        opacity: 0.2;
+        transform: scale(0.74);
+      }
+      45% {
+        opacity: 0.45;
+      }
+      100% {
+        opacity: 0;
+        transform: scale(1.06);
+      }
+    }
+
+    @keyframes iconBlend {
+      0% {
+        filter: blur(0);
+      }
+      45% {
+        filter: blur(1.4px);
+      }
+      100% {
+        filter: blur(0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .stage,
+      .radial-ellipse,
+      .stage::before,
+      .stage::after,
+      .toggle,
+      .toggle::before,
+      .icon-slot,
+      .thumb {
+        transition-duration: 1ms !important;
+        animation-duration: 1ms !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .day-night-root { padding: 0; }
+      .stage {
+        width: 100%;
+        height: 700px;
+        min-height: 700px;
+        max-height: 700px;
+        border-radius: 18px;
+      }
+    }
+  </style>
+</head>
+<body data-theme="day">
+  <div class="day-night-root">
+    <div class="stage">
+      <span class="radial-ellipse" aria-hidden="true"></span>
+      <div class="toggle-wrap">
+        <button
+          type="button"
+          class="toggle"
+          id="dayNightToggle"
+          role="switch"
+          aria-checked="true"
+          aria-label="Toggle day and night"
+          title="Toggle day and night"
+        >
+          <span class="icon-slot icon-moon" aria-hidden="true">
+            <span class="material-symbols-rounded">bedtime</span>
+          </span>
+          <span class="icon-slot icon-sun" aria-hidden="true">
+            <span class="material-symbols-rounded">wb_sunny</span>
+          </span>
+          <span class="thumb" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const bodyEl = document.body;
+    const toggleEl = document.getElementById("dayNightToggle");
+    let blurTimer = null;
+
+    function setTheme(theme) {
+      const isDay = theme === "day";
+      bodyEl.dataset.theme = isDay ? "day" : "night";
+      toggleEl.dataset.direction = isDay ? "to-day" : "to-night";
+      toggleEl.dataset.uiTheme = isDay ? "day" : "night";
+      toggleEl.setAttribute("aria-checked", String(isDay));
+
+      toggleEl.classList.add("is-transitioning");
+      window.clearTimeout(blurTimer);
+      blurTimer = window.setTimeout(() => {
+        toggleEl.classList.remove("is-transitioning");
+      }, 280);
+    }
+
+    toggleEl.addEventListener("click", () => {
+      const nextTheme = bodyEl.dataset.theme === "day" ? "night" : "day";
+      setTheme(nextTheme);
+    });
+
+    setTheme(bodyEl.dataset.theme || "day");
+  </script>
+</body>
+</html>
